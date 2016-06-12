@@ -8,3 +8,19 @@
 
 一个人写难免会有不完整或纰漏的地方，请各位不要只看看，有改进的地方可以提issuse或直接与主笔宝宝探，只要人人献出一点爱，世界就会变成美好的明天 :)
 
+
+主笔宝宝：
+2 Flash File System,  F2FS: A New File System for Flash Storage   朱丽叶
+3 Non-volatile memory,  System software for persistent memory     黎哲明
+4 In-memory computing, Resilient Distributed Datasets: A Fault-Tolerant Abstraction for In-Memory Cluster Computing 
+5 Crash-Recovery,  Fast Crash Recovery at RAMCloud
+6 Multiprocessor, Concurrency & Locking,  Non-scalable locks are dangerous
+7 Graph Computation, PowerGraph: Distributed Graph-Parallel Computation on Natural Graphs 李宁，赵志勇
+8 Transactional Memory/DB,Transactional memory: architectural support for lock-free data structures
+9 Distributed Storage,  Bigtable: A Distributed Storage System for Structured Data  王英艺
+10 Distributed Transactions,Spanner: Google’s Globally-Distributed Database   薛翔
+11 Low (Tail) latency, The Tail at Scale
+12 Bugs, Towards Optimization-Safe Systems: Analyzing the Impact of Undefined Behavior
+13 NFV (Network Function Virtualization),  The Click Modular Router
+14 RDMA, Fast In-memory Transaction Processing using RDMA and HTM
+
