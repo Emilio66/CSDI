@@ -13,13 +13,13 @@
 * 2. Flash File System,  F2FS: A New File System for Flash Storage   朱丽叶
 * 3. Non-volatile memory,  System software for persistent memory     黎哲明
 * 4. In-memory computing, Resilient Distributed Datasets: A Fault-Tolerant Abstraction for In-Memory Cluster Computing 崔毅
-* 5 Crash-Recovery,  Fast Crash Recovery at RAMCloud
-* 6 Multiprocessor, Concurrency & Locking,  Non-scalable locks are dangerous
+* 5 Crash-Recovery,  Fast Crash Recovery at RAMCloud 李然
+* 6 Multiprocessor, Concurrency & Locking,  Non-scalable locks are dangerous 李智
 * 7 Graph Computation, PowerGraph: Distributed Graph-Parallel Computation on Natural Graphs 李宁，赵志勇
-* 8 Transactional Memory/DB,Transactional memory: architectural support for lock-free data structures
-* 9 Distributed Storage,  Bigtable: A Distributed Storage System for Structured Data  王英艺
+* 8 Transactional Memory/DB,Transactional memory: architectural support for lock-free data structures 李阳德
+* 9 Distributed Storage,  Bigtable: A Distributed Storage System for Structured Data  王英艺，张金石，姜德治
 * 10 Distributed Transactions,Spanner: Google’s Globally-Distributed Database   薛翔
-* 11 Low (Tail) latency, The Tail at Scale
+* 11 Low (Tail) latency, The Tail at Scale 李春淼
 * 12 Bugs, Towards Optimization-Safe Systems: Analyzing the Impact of Undefined Behavior 夏亦谦
 * 13 NFV (Network Function Virtualization),  The Click Modular Router 李宗垚，陈文康，谭钧升
 * 14 RDMA, Fast In-memory Transaction Processing using RDMA and HTM 吴强强
