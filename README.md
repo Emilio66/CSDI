@@ -19,7 +19,7 @@
 * 9 Distributed Storage,  Bigtable: A Distributed Storage System for Structured Data  王英艺，张金石，姜德治
 * 10 Distributed Transactions,Spanner: Google’s Globally-Distributed Database   薛翔
 * 11 Low (Tail) latency, The Tail at Scale 李春淼
-* 12 Bugs, Towards Optimization-Safe Systems: Analyzing the Impact of Undefined Behavior 夏亦谦
+* 12 Bugs, Towards Optimization-Safe Systems: Analyzing the Impact of Undefined Behavior 夏亦谦、刘宁
 * 13 NFV (Network Function Virtualization),  The Click Modular Router 李宗垚，陈文康，谭钧升
 * 14 RDMA, Fast In-memory Transaction Processing using RDMA and HTM 吴强强
 

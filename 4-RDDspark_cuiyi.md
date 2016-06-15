@@ -39,9 +39,9 @@ Pregel,Twister和HaLoop支持迭代的运算。然而这些框架只是对他们
 
 一、
 
-![](https://github.com/Emilio66/CSDI/blob/master/4_code1.1.png)
+![](img/4_code1.1.png)
 
-![](https://github.com/Emilio66/CSDI/blob/master/4_code1.2.png)
+![](img/4_code1.2.png)
 
 第一行定义了一个由HDFS保存的RDD
 第二行将第一行产生的RDD过滤掉不必要的信息，保留以ERROR开头的信息，产生新的RDD
@@ -50,7 +50,7 @@ Pregel,Twister和HaLoop支持迭代的运算。然而这些框架只是对他们
 
 二、逻辑回归
 
-![](https://github.com/Emilio66/CSDI/blob/master/4_code2.png)
+![](img/4_code2.png)
 
 将文本文件的每一行做map转换解析成Point对象，然后将所得的points RDD保留在内存中。
 随机生成一个向量赋给w
@@ -58,7 +58,7 @@ Pregel,Twister和HaLoop支持迭代的运算。然而这些框架只是对他们
 
 三、PageRank
 
-![](https://github.com/Emilio66/CSDI/blob/master/4_code3.png)
+![](img/4_code3.png)
 
 首先将图分解成url和它所指向的链接的对组成的RDD links，然后将这个RDD缓存在内存中
 随机初始化一个url和它所对应的rank值组成的RDD ranks。
