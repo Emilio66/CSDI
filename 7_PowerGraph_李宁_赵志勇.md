@@ -64,7 +64,7 @@ Oblivious的贪婪分区策略：折中
 ##课后题解答
 
 
-1. How skewed degree distribution challenges the original graph parallel computation? Give a brief summary of the computation procedure and then analysis the challenges.
+1.1. How skewed degree distribution challenges the original graph parallel computation? Give a brief summary of the computation procedure and then analysis the challenges.
 自然图highly skewed，有power-law degree distribution现象（少数节点拥有极大多数边，大多数节点只有少量边），此外目前的按边划分的质量差导致
   * work imbalance(gather、scatter与degree数量成正比), 
   * partition(直接hash，随机划分，poor locality，高度数节点与低度数节点被同样地划分，不合理)，
@@ -78,7 +78,7 @@ Gather：收集邻居信息 先收集同一台机器的信息，然后对不同�
 Apply：用收集到的信息来更新中心节点的信息
 Scatter（分散）：更新邻居点和边，触发邻居点进行下一轮迭代。 
 
-2. In your opinion, what are the advantages of graph parallel computation comparing with traditional data parallel processing (e.g. map-reduce)?
+2.2. In your opinion, what are the advantages of graph parallel computation comparing with traditional data parallel processing (e.g. map-reduce)?
 
 随着数据集的增长，复杂的数据计算模型和存储已经达到单个机器的极限，图计算可以提高并行性且降低网络通信和存储成本
 graph-parallel computation是对图进行专门优化的计算模式，它的并行计算是以节点为单位，各节点同时运行自己的vertex-program，达到最终计算目的，单个节点的程序相对比较简单，而且比较独立，所以并行程度高，计算速度远远快于同一功能的data-parallel程序。 
@@ -88,7 +88,7 @@ Map-Reduce中间结果是存储在磁盘中，后续处理还需读磁盘，速�
 另外，现实世界中的很多问题更适合用图来描述，能够获得数据间更深层次的关系，如社交网络、自然语言的处理、广告精准投放等，建模过程更自然，更符合人类的思维习惯
 
 （感觉还有优势，欢迎补充）
-3.	Brief explain vertex-cut and G A S steps using following small graph (each src-dst pair is a directed edge of the graph). Assume we have 3 nodes, and hash (vertex)=vertex%3, hash(src,dst)= (src+dst)%3. You may need to draw a graph.
+3.3 Brief explain vertex-cut and G A S steps using following small graph (each src-dst pair is a directed edge of the graph). Assume we have 3 nodes, and hash (vertex)=vertex%3, hash(src,dst)= (src+dst)%3. You may need to draw a graph.
 
 0-1   0-2   0-3 
 0-4   1-3   1-4 
@@ -100,11 +100,11 @@ Map-Reduce中间结果是存储在磁盘中，后续处理还需读磁盘，速�
 
 GAS steps:
 选择vertex 0 in node 0 作为master（主节点）, 其余mirrors（备份节点）.
-1.Gather：
+  * Gather：
 	gather在每个机器上单独运行，即从邻近的vertices收集信息（sum过程），将accumulator从mirror传输到master 
-2.Apply:
+  * Apply:
 	master更新vertices的数据，然后将更新后的数据传输到各个mirrors
-3.Scatter:
+  * Scatter
 	将更新后的数据发送到邻近的vertices，并进行下一次迭代。
 	
 ![alt text](/7-3-2.png "result")
