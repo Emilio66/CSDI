@@ -37,8 +37,10 @@ Pregel,Twister和HaLoop支持迭代的运算。然而这些框架只是对他们
 
 论文中代码的执行：
 一、
-![](CSDI/4_code1.1.png)
-![](CSDI/4_code1.2.png)
+
+![](https://github.com/Emilio66/CSDI/blob/master/4_code1.1.png)
+
+![](https://github.com/Emilio66/CSDI/blob/master/4_code1.2.png)
 
 第一行定义了一个由HDFS保存的RDD
 第二行将第一行产生的RDD过滤掉不必要的信息，保留以ERROR开头的信息，产生新的RDD
@@ -46,14 +48,16 @@ Pregel,Twister和HaLoop支持迭代的运算。然而这些框架只是对他们
 然后对error RDD再次过滤出包含"HDFS"的数据项，然后筛选出以制表符分隔的第三个字段。Spark调度器会将这些transformation指令发送给缓存着errors分区的结点。最后将结果记录返回。
 
 二、逻辑回归
-![](CSDI/4_code2.png)
+
+![](https://github.com/Emilio66/CSDI/blob/master/4_code2.png)
 
 将文本文件的每一行做map转换解析成Point对象，然后将所得的points RDD保留在内存中。
 随机生成一个向量赋给w
 在缓存有points RDD的结点中反复调用map和reduce转换，在每一步的迭代中利用w的函数计算gradient的值。然后将w与gradient的值相减得到新的w，带入下一次迭代。迭代多次后，w会收敛，得到最终的结果。
 
 三、PageRank
-![](CSDI/4_code3.png)
+
+![](https://github.com/Emilio66/CSDI/blob/master/4_code3.png)
 
 首先将图分解成url和它所指向的链接的对组成的RDD links，然后将这个RDD缓存在内存中
 随机初始化一个url和它所对应的rank值组成的RDD ranks。
