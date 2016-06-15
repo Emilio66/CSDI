@@ -25,10 +25,10 @@ Pregel向单个worker发送大量消息给邻居节点，成本较高。同步�
 GraphLab共享状态时异步执行，需要大量锁。会触到图的大部分，并且对于单台机器边的元数据太大
 -->
 GraphLab和Pregel是不适合处理这种natural graphs 
-主要的两大挑战是高纬度的点和低质量的分区策略。
+主要的两大挑战是高度数的点和低质量的分区策略。
 
 PowerGraph的特点
-第一，提出了GAS计算模型，将高维度的点进行并行化
+第一，提出了GAS计算模型，将高度数的点进行并行化
 第二是采用点切分策略，来保证整个集群的均衡性，该策略对大量密率图分区是非常高效的。
 
 #### GAS模型 
@@ -39,10 +39,10 @@ PowerGraph的特点
  
 
 #### 划分方式
-*   edge-cut 把边切开，节点平均分配，有的点有很多边，imbalance  
+*   edge-cut 通常通过对每个节点编号进行hash，把节点平均分配到各台机器，有很多边被切分开，所以在对应机器上会重新构建这些边，对于边的数量较少的节点采用这种方式并没有什么坏处，但对于度数很高的节点，重构边的工作量就会很大，造成负载不均衡
 
  例子：pregel（synchronous bulk message passing）  graphLab asynchronous shared memory
-*   vertex-cut 边平均分配，点可以跨机器，有mirror节点    
+*   vertex-cut 将节点切分成多个mirror节点，每个mirror节点负责处理一部分的边，这样边就被平均分配到各台机器上，度数高的节点的边被平均分布在多台机器上，每台机器的负载相对均衡  
 
  例子：powergraph （balanced p-way vertex-cut)
 
@@ -64,28 +64,31 @@ Oblivious的贪婪分区策略：折中
 ##课后题解答
 
 
-1.How skewed degree distribution challenges the original graph parallel computation? Give a brief summary of the computation procedure and then analysis the challenges.
-
+1. How skewed degree distribution challenges the original graph parallel computation? Give a brief summary of the computation procedure and then analysis the challenges.
+自然图highly skewed，有power-law degree distribution现象（少数节点拥有极大多数边，大多数节点只有少量边），此外目前的按边划分的质量差导致
+*   work imbalance(gather、scatter与degree数量成正比), 
+*   partition(直接hash，随机划分，poor locality，高度数节点与低度数节点被同样地划分，不合理)，
+*   通信开销不平衡（度数高的节点所在机器需要较多的通信）；
+*   存储不均衡，一个节点的所有邻边信息可能超过机器容量；
+*   computation（之前的计算模式是多个节点之间可以并行，单个节点内无法并行，对于高度数节点来说可扩展性不强）
 PowerGraph提出了自己的一套计算模型，叫GAS分解。G是Gather的意思，A是Apply的意思，S是Scatter的意思。
 GAS分解过程如下，
 Gather：收集邻居信息 先收集同一台机器的信息，然后对不同主机收集的信息进行汇总。得到最后的求和信息。
-Apply：对中心点应用收集点的值，得到y一撇
+Apply：用收集到的信息来更新中心节点的信息
 Scatter（分散）：更新邻居点和边，触发邻居点进行下一轮迭代。 
 
-自然图并行化计算的挑战：
-work balance：图的 skewed degree distribution 会导致工作分布不平衡
-Partitioning：skewed degree distribution导致很难分区
-Communication：skewed degree distribution导致信息交流不对称
-Storage：skewed degree distribution导致某个点的度数超过机器的存储量
-Computation：由于限制度数高的节点的可伸缩性，现有的图计算不能并行化计算个人的vertex-programs
+2. In your opinion, what are the advantages of graph parallel computation comparing with traditional data parallel processing (e.g. map-reduce)?
 
-2.In your opinion, what are the advantages of graph parallel computation comparing with traditional data parallel processing (e.g. map-reduce)?
-图计算相对于传统数据并行处理的优势：
-在并行计算中，图计算提供非常灵活的对于数据之间管子的抽象描述，能够获得数据间更深层次的关系。
 随着数据集的增长，复杂的数据计算模型和存储已经达到单个机器的极限，图计算可以提高并行性且降低网络通信和存储成本
+graph-parallel computation是对图进行专门优化的计算模式，它的并行计算是以节点为单位，各节点同时运行自己的vertex-program，达到最终计算目的，单个节点的程序相对比较简单，而且比较独立，所以并行程度高，计算速度远远快于同一功能的data-parallel程序。 
+Map-Reduce每轮迭代需要传递整张拓扑图作参数，Graph-parallel只需将状态告诉邻接节点即可，每轮迭代之间无需传送整张拓扑图。
+Map-reduce需要写额外程序检测fix-point（循环次数终止条件）
+Map-Reduce中间结果是存储在磁盘中，后续处理还需读磁盘，速度受影响，图计算是在内存中完成，速度较快。
+另外，现实世界中的很多问题更适合用图来描述，能够获得数据间更深层次的关系，如社交网络、自然语言的处理、广告精准投放等，建模过程更自然，更符合人类的思维习惯
+
 （感觉还有优势，欢迎补充）
 
-3.Brief explain vertex-cut and G A S steps using following small graph (each src-dst pair is a directed edge of the graph). Assume we have 3 nodes, and hash(vertex)=vertex%3, hash(src,dst)= (src+dst)%3. You may need to draw a graph.
+3. Brief explain vertex-cut and G A S steps using following small graph (each src-dst pair is a directed edge of the graph). Assume we have 3 nodes, and hash(vertex)=vertex%3, hash(src,dst)= (src+dst)%3. You may need to draw a graph.
 0-1   0-2   0-3 
 0-4   1-3   1-4 
 2-4   2-5   3-5
