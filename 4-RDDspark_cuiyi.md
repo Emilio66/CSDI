@@ -36,6 +36,7 @@ Pregel,Twister和HaLoop支持迭代的运算。然而这些框架只是对他们
 一些系统提供了共享可变状态，通过它来允许用户执行内存计算。比如Piccolo使得用户可以运行并行函数来读和更新分布式hash表中的元素。分布式共享内存系统(DSM)和RAMCloud也提供了类似的模型。但是Piccolo和DSM提供的接口只能读或者更新表中的元素。而RDD提供了更高等级的编程接口，这些接口基于map,sort,join等算子。另一方面Piccolo和DSM只能通过设置检查点和回滚来实现错误恢复，这样的开销远比RDD中基于lineage的恢复机制的开销要高得多。RDD只需要将lineage的信息做log，当分区丢失的时候，通过lineage可以重新计算出丢失的分区。此外，由于RDD是不可变的，这一特性有助于缓解缓慢结点(stragglers)的情况——可以复制一份slow task的副本然后在其他结点上运行。
 
 论文中代码的执行：
+
 一、
 
 ![](https://github.com/Emilio66/CSDI/blob/master/4_code1.1.png)
