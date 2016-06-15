@@ -71,13 +71,14 @@ Oblivious的贪婪分区策略：折中
   * 通信开销不平衡（度数高的节点所在机器需要较多的通信）；
   * 存储不均衡，一个节点的所有邻边信息可能超过机器容量；
   * computation（之前的计算模式是多个节点之间可以并行，单个节点内无法并行，对于高度数节点来说可扩展性不强）
+ 
 PowerGraph提出了自己的一套计算模型，叫GAS分解。G是Gather的意思，A是Apply的意思，S是Scatter的意思。
 GAS分解过程如下，
 Gather：收集邻居信息 先收集同一台机器的信息，然后对不同主机收集的信息进行汇总。得到最后的求和信息。
 Apply：用收集到的信息来更新中心节点的信息
 Scatter（分散）：更新邻居点和边，触发邻居点进行下一轮迭代。 
 
-2. In your opinion, what are the advantages of graph parallel computation comparing with traditional data parallel processing (e.g. map-reduce)?
+2. In your opinion, what are the advantages of graph parallel computation comparing with traditional data parallel processing (e.g. map-reduce)?
 
 随着数据集的增长，复杂的数据计算模型和存储已经达到单个机器的极限，图计算可以提高并行性且降低网络通信和存储成本
 graph-parallel computation是对图进行专门优化的计算模式，它的并行计算是以节点为单位，各节点同时运行自己的vertex-program，达到最终计算目的，单个节点的程序相对比较简单，而且比较独立，所以并行程度高，计算速度远远快于同一功能的data-parallel程序。 
