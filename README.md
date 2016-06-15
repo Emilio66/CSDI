@@ -11,7 +11,7 @@
 >伟大的主笔宝宝们：
 * 2. Flash File System,  F2FS: A New File System for Flash Storage   朱丽叶
 * 3. Non-volatile memory,  System software for persistent memory     黎哲明
-* 4. In-memory computing, Resilient Distributed Datasets: A Fault-Tolerant Abstraction for In-Memory Cluster Computing 崔毅 黄鑫
+* 4. In-memory computing, Resilient Distributed Datasets: A Fault-Tolerant Abstraction for In-Memory Cluster Computing 崔毅
 * 5 Crash-Recovery,  Fast Crash Recovery at RAMCloud 李然
 * 6 Multiprocessor, Concurrency & Locking,  Non-scalable locks are dangerous 李智
 * 7 Graph Computation, PowerGraph: Distributed Graph-Parallel Computation on Natural Graphs 李宁，赵志勇
