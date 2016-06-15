@@ -88,8 +88,8 @@ Map-Reduce中间结果是存储在磁盘中，后续处理还需读磁盘，速�
 另外，现实世界中的很多问题更适合用图来描述，能够获得数据间更深层次的关系，如社交网络、自然语言的处理、广告精准投放等，建模过程更自然，更符合人类的思维习惯
 
 （感觉还有优势，欢迎补充）
+3.	Brief explain vertex-cut and G A S steps using following small graph (each src-dst pair is a directed edge of the graph). Assume we have 3 nodes, and hash (vertex)=vertex%3, hash(src,dst)= (src+dst)%3. You may need to draw a graph.
 
-3. Brief explain vertex-cut and G A S steps using following small graph (each src-dst pair is a directed edge of the graph). Assume we have 3 nodes, and hash(vertex)=vertex%3, hash(src,dst)= (src+dst)%3. You may need to draw a graph.
 0-1   0-2   0-3 
 0-4   1-3   1-4 
 2-4   2-5   3-5
