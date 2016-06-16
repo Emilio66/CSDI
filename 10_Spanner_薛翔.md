@@ -7,13 +7,14 @@
 # Spanner
 ## **1. Overview**
 ### 现状
-不适用于BigTable的应用：“complex, evolving schemas”，或要求所有副本保持强一致性。
+    不适用于BigTable的应用：“complex, evolving schemas”，或要求所有副本保持强一致性。
 Megastore：poor write throughput
 ### 区别于BigTable
 - 从简单的key-value store加强到temporal multi-version database；
 - 数据以半关系型的table组织；
 - 支持txn语义；
 - 支持SQL查询。
+
 ### 两个特性
 - 其上的应用程序能够动态配置replication，达到负载均衡和降低延迟；
 - External Consistency
@@ -37,16 +38,16 @@ Megastore：poor write throughput
 - txn mngr负责处理跨Paxos group的txn（2PL）
 
 ### Directories
-dir是数据放置的单元，其下所有数据有一致的备份设置
+    dir是数据放置的单元，其下所有数据有一致的备份设置
 
 ### Data Model
-基于directory-bucketed key-value mappings，主键作为key，其他作为value
+    基于directory-bucketed key-value mappings，主键作为key，其他作为value
 
 ## **3. TrueTime**
-TT.now()：返回一个时间段[earliest, latest]，保证被调用的一刻的实际时间处在这个范围内
-TT.after(t), TT.before(t)：检查时间t是否已经成为“过去”或仍处在“未来”，即是否小于earliest或大于latest
-使用GPS和原子钟来保证TT.now()准确性
-    GPS互相同步但易受干扰：原子钟相对稳定但一段时间不同步会导致TT.now()时间段变大（原子钟的频率会有微小差异）
+    TT.now()：返回一个时间段[earliest, latest]，保证被调用的一刻的实际时间处在这个范围内
+    TT.after(t), TT.before(t)：检查时间t是否已经成为“过去”或仍处在“未来”，即是否小于earliest或大于latest
+    使用GPS和原子钟来保证TT.now()准确性
+    *GPS互相同步但易受干扰：原子钟相对稳定但一段时间不同步会导致TT.now()时间段变大（原子钟的频率会有微小差异）
 
 ## **4. Concurrency Control**
 
@@ -56,13 +57,13 @@ TT.after(t), TT.before(t)：检查时间t是否已经成为“过去”或仍处
 - snapshot reads: 读历史数据的txn。不拿锁，选择足够up-to-date的replica执行都行。
 
 ### ﻿Read-Write Txns
-- （client）
+    （client）
 1. 拿锁；
 2. 执行read&write；
 3. 开始2PC，选择coordinator group，将修改发送给coordinator leader；
-- （所有non-coordinator-participant leader）
+    （所有non-coordinator-participant leader）
 4. 选择大于本地最近一次提交的timestamp作为prepare timestamp返回给coordinator leader；
-- （coordinator leader）
+    （coordinator leader）
 5. 获得相应的写锁；
 6. 获取所有participant leader的prepare timestamps，选择不小于所有prepare timestamps的s作为commit timestamp，此s还应大于TT.now().latest和本地最近txn的commit timestamp；
 7. 等待s < TT.now().earliest，即TT.after(s)，确保所有在s之前的txn都全局生效；
@@ -78,5 +79,5 @@ TT.after(t), TT.before(t)：检查时间t是否已经成为“过去”或仍处
 *以上两种情况都能保证这次读在所有已全局生效的写之后
 
 ### Schema-Change Txns
-通过TT，选取未来的timestamp作为该txn提交时间，记为s；
-所有在s之前的txn正常执行；在s之后的被blocked，直到TT.after(s)==true再执行
+    通过TT，选取未来的timestamp作为该txn提交时间，记为s；
+    所有在s之前的txn正常执行；在s之后的被blocked，直到TT.after(s)==true再执行
