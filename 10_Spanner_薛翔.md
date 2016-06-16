@@ -1,14 +1,14 @@
 # SQL -> noSQL -> newSQL 
-- [为什么](http://dataconomy.com/sql-vs-nosql-vs-newsql-finding-the-right-solution/)？
-    SQL：使用广泛，保证ACID；扩展性差，过于通用，调试复杂；
-    noSQL：最终一致性，扩展性好，动态调整schema；代价是ACID的弱化；
-    newSQL：强一致性，事务支持，SQL语义和工具，性能好；通用性还是没SQL好。
+- [为什么？](http://dataconomy.com/sql-vs-nosql-vs-newsql-finding-the-right-solution/)
+    SQL：使用广泛，保证ACID；扩展性差，过于通用，调试复杂;
+    noSQL：最终一致性，扩展性好，动态调整schema；代价是ACID的弱化;
+    newSQL：强一致性，事务支持，SQL语义和工具，性能好；通用性还是没SQL好
 
 # Spanner
 ## **1. Overview**
 ### 现状
     不适用于BigTable的应用：“complex, evolving schemas”，或要求所有副本保持强一致性。
-Megastore：poor write throughput
+    Megastore：poor write throughput
 ### 区别于BigTable
 - 从简单的key-value store加强到temporal multi-version database；
 - 数据以半关系型的table组织；
@@ -57,26 +57,21 @@ Megastore：poor write throughput
 - snapshot reads: 读历史数据的txn。不拿锁，选择足够up-to-date的replica执行都行。
 
 ### ﻿Read-Write Txns
-    （client）
-1. 拿锁；
+1. （client执行部分）拿锁；
 2. 执行read&write；
 3. 开始2PC，选择coordinator group，将修改发送给coordinator leader；
-    （所有non-coordinator-participant leader）
-4. 选择大于本地最近一次提交的timestamp作为prepare timestamp返回给coordinator leader；
-    （coordinator leader）
-5. 获得相应的写锁；
+4. （所有non-coordinator-participant leader执行部分）选择大于本地最近一次提交的timestamp作为prepare timestamp返回给coordinator leader；
+5. （coordinator leader执行部分）获得相应的写锁；
 6. 获取所有participant leader的prepare timestamps，选择不小于所有prepare timestamps的s作为commit timestamp，此s还应大于TT.now().latest和本地最近txn的commit timestamp；
 7. 等待s < TT.now().earliest，即TT.after(s)，确保所有在s之前的txn都全局生效；
 8. 以s为commit timestamp提交当前txn，并反馈client；
 9. 释放锁。
 
 ### Read-Only Txns
-首先，提取所有会被读到的key作为scope，然后分类讨论：
-- 如果scope都落在一个Paxos group
-    将这个RO txn发送给group leader；leader调用LastTS()获取最近的write timestamp作为RO txn的timestamp并执行
-- 如果scope跨多个Paxos groups
-    读取TT.now().latest作为当前RO txn的timestamp并执行
-*以上两种情况都能保证这次读在所有已全局生效的写之后
+    首先，提取所有会被读到的key作为scope，然后分类讨论：
+    1. 如果scope都落在一个Paxos group：将这个RO txn发送给group leader；leader调用LastTS()获取最近的write timestamp作为RO txn的timestamp并执行
+    2. 如果scope跨多个Paxos groups：读取TT.now().latest作为当前RO txn的timestamp并执行
+    *以上两种情况都能保证这次读在所有已全局生效的写之后
 
 ### Schema-Change Txns
     通过TT，选取未来的timestamp作为该txn提交时间，记为s；
