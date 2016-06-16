@@ -6,7 +6,7 @@
 3. 课后题
 
 ## SQL -> noSQL -> newSQL 
-- [为什么？](http://dataconomy.com/sql-vs-nosql-vs-newsql-finding-the-right-solution/)
+    [为什么](http://dataconomy.com/sql-vs-nosql-vs-newsql-finding-the-right-solution/)
     SQL：使用广泛，保证ACID；扩展性差，过于通用，调试复杂;
     noSQL：最终一致性，扩展性好，动态调整schema；代价是ACID的弱化;
     newSQL：强一致性，事务支持，SQL语义和工具，性能好；通用性还是没SQL好
@@ -78,7 +78,7 @@
 
 #### Read-Only Txns
     首先，提取所有会被读到的key作为scope，然后分类讨论：
-    *以上两种情况都能保证这次读在所有已全局生效的写之后
+    *以下两种处理都能保证这次读在所有已全局生效的写之后
 1. 如果scope都落在一个Paxos group：将这个RO txn发送给group leader；leader调用LastTS()获取最近的write timestamp作为RO txn的timestamp并执行
 2. 如果scope跨多个Paxos groups：读取TT.now().latest作为当前RO txn的timestamp并执行
     
