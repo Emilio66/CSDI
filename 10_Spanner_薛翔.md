@@ -31,7 +31,7 @@ Megastore：poor write throughput
 
 ### **2. Implementation**
 #### 系统架构
-![Figure 1 in paper](img/10-1.png "spannerServerOrganization")
+![Figure 1 in paper](img/10_1.png "spannerServerOrganization")
 - universe：Spanner的整个部署；
 - zone：等同于其下BigTable的部署节点，是管理配置的单位，也是物理隔离的单位；
 - zonemaster：每个zone都有一个，负责将数据分配给当前zone的spanserver；
@@ -40,7 +40,7 @@ Megastore：poor write throughput
 - placement driver：单例，负责在zones之间迁移数据。
 
 #### Spanserver架构
-![Figure 2 in paper](img/10-2.png "spannerSoftwareStack")
+![Figure 2 in paper](img/10_2.png "spannerSoftwareStack")
 
 每个tablet上维护一个Paxos状态机
 写请求由Paxos选出的leader负责；读请求由任一足够up-to-date的replica执行都行
