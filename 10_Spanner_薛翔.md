@@ -44,14 +44,16 @@
     基于directory-bucketed key-value mappings，主键作为key，其他作为value
 
 ## **3. TrueTime**
+### API
     TT.now()：返回一个时间段[earliest, latest]，保证被调用的一刻的实际时间处在这个范围内
     TT.after(t), TT.before(t)：检查时间t是否已经成为“过去”或仍处在“未来”，即是否小于earliest或大于latest
+### 实现方式
     使用GPS和原子钟来保证TT.now()准确性
     *GPS互相同步但易受干扰：原子钟相对稳定但一段时间不同步会导致TT.now()时间段变大（原子钟的频率会有微小差异）
 
 ## **4. Concurrency Control**
 
-### 三类txn：read-write txn; read-only txn; snapshot reads
+### 主要的txn类别
 - read-write txn: 普通的读写txn；
 - read-only txn: 确定只读的txn。不拿锁，不block接下来的read-write txn，选择足够up-to-date的replica执行都行。
 - snapshot reads: 读历史数据的txn。不拿锁，选择足够up-to-date的replica执行都行。
@@ -76,3 +78,8 @@
 ### Schema-Change Txns
     通过TT，选取未来的timestamp作为该txn提交时间，记为s；
     所有在s之前的txn正常执行；在s之后的被blocked，直到TT.after(s)==true再执行
+
+# 课后题
+1. What is external consistency? What’s the difference between external consistency and serializability?
+2. How does Spanner achieve the external consistency?
+3. What will happen if the TrueTime assumption is violated? How the authors argue that TrueTime assumption should be correc
