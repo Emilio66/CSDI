@@ -6,7 +6,8 @@
 3. 课后题
 
 ## SQL -> noSQL -> newSQL 
-    [为什么](http://dataconomy.com/sql-vs-nosql-vs-newsql-finding-the-right-solution/)
+- [为什么](http://dataconomy.com/sql-vs-nosql-vs-newsql-finding-the-right-solution/)
+
     SQL：使用广泛，保证ACID；扩展性差，过于通用，调试复杂;
     noSQL：最终一致性，扩展性好，动态调整schema；代价是ACID的弱化;
     newSQL：强一致性，事务支持，SQL语义和工具，性能好；通用性还是没SQL好
