@@ -20,22 +20,25 @@ Megastore：poor write throughput
     定义：分布式事务系统中，txn1的commit先于txn2的start，那么txn1的提交时间应小于txn2的提交时间。即能看见txn2的时候一定要能看见txn1。
 
 ## **2. Implementation**
-### 系统架构（Figure 1）
-![alt text](/img/10-1.png "server organization")
+### 系统架构
+![](/img/10-1.png)
 - universe：Spanner的整个部署；
 - zone：等同于其下BigTable的部署节点，是管理配置的单位，也是物理隔离的单位；
 - zonemaster：每个zone都有一个，负责将数据分配给当前zone的spanserver；
 - spanserver：每个zone有成百上千个，负责为client提供数据服务；
 - universe master：单例，维护所有zones；
 - placement driver：单例，负责在zones之间迁移数据。
-### Spanserver架构（Figure 2）
-![alt text](/img/10-2.png "spanserver software stack")
-    每个tablet上维护一个Paxos状态机
-    写请求由Paxos选出的leader负责；读请求由任一足够up-to-date的replica执行都行
-    leader持有lock table来执行2PL提交
-    txn mngr负责处理跨Paxos group的txn（2PL）
+
+### Spanserver架构
+![](/img/10-2.png)
+- 每个tablet上维护一个Paxos状态机
+- 写请求由Paxos选出的leader负责；读请求由任一足够up-to-date的replica执行都行
+- leader持有lock table来执行2PL提交
+- txn mngr负责处理跨Paxos group的txn（2PL）
+
 ### Directories
 dir是数据放置的单元，其下所有数据有一致的备份设置
+
 ### Data Model
 基于directory-bucketed key-value mappings，主键作为key，其他作为value
 
@@ -46,10 +49,12 @@ TT.after(t), TT.before(t)：检查时间t是否已经成为“过去”或仍处
     GPS互相同步但易受干扰：原子钟相对稳定但一段时间不同步会导致TT.now()时间段变大（原子钟的频率会有微小差异）
 
 ## **4. Concurrency Control**
+
 ### 三类txn：read-write txn; read-only txn; snapshot reads
 - read-write txn: 普通的读写txn；
 - read-only txn: 确定只读的txn。不拿锁，不block接下来的read-write txn，选择足够up-to-date的replica执行都行。
 - snapshot reads: 读历史数据的txn。不拿锁，选择足够up-to-date的replica执行都行。
+
 ### ﻿Read-Write Txns
 - （client）
 1. 拿锁；
@@ -63,6 +68,7 @@ TT.after(t), TT.before(t)：检查时间t是否已经成为“过去”或仍处
 7. 等待s < TT.now().earliest，即TT.after(s)，确保所有在s之前的txn都全局生效；
 8. 以s为commit timestamp提交当前txn，并反馈client；
 9. 释放锁。
+
 ### Read-Only Txns
 首先，提取所有会被读到的key作为scope，然后分类讨论：
 - 如果scope都落在一个Paxos group
@@ -70,6 +76,7 @@ TT.after(t), TT.before(t)：检查时间t是否已经成为“过去”或仍处
 - 如果scope跨多个Paxos groups
     读取TT.now().latest作为当前RO txn的timestamp并执行
 *以上两种情况都能保证这次读在所有已全局生效的写之后
+
 ### Schema-Change Txns
 通过TT，选取未来的timestamp作为该txn提交时间，记为s；
 所有在s之前的txn正常执行；在s之后的被blocked，直到TT.after(s)==true再执行
