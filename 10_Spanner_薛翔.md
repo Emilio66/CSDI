@@ -9,16 +9,13 @@
 - [为什么](http://dataconomy.com/sql-vs-nosql-vs-newsql-finding-the-right-solution/)
 
     SQL：使用广泛，保证ACID；扩展性差，过于通用，调试复杂;
-
     noSQL：最终一致性，扩展性好，动态调整schema；代价是ACID的弱化;
-
     newSQL：强一致性，事务支持，SQL语义和工具，性能好；通用性还是没SQL好
 
 ## Spanner
 ### **1. Overview**
 #### 现状
 不适用于BigTable的应用：“complex, evolving schemas”，或要求所有副本保持强一致性。
-
 Megastore：poor write throughput
 
 #### 区别于BigTable
@@ -34,7 +31,7 @@ Megastore：poor write throughput
 
 ### **2. Implementation**
 #### 系统架构
-![](/img/10-1.png "spannerServerOrganization")
+![Figure 1 in paper](/img/10-1.png "spannerServerOrganization")
 - universe：Spanner的整个部署；
 - zone：等同于其下BigTable的部署节点，是管理配置的单位，也是物理隔离的单位；
 - zonemaster：每个zone都有一个，负责将数据分配给当前zone的spanserver；
@@ -43,7 +40,8 @@ Megastore：poor write throughput
 - placement driver：单例，负责在zones之间迁移数据。
 
 #### Spanserver架构
-![](/img/10-2.png "spannerSoftwareStack")
+![Figure 2 in paper](/img/10-2.png "spannerSoftwareStack")
+
 每个tablet上维护一个Paxos状态机
 写请求由Paxos选出的leader负责；读请求由任一足够up-to-date的replica执行都行
 leader持有lock table来执行2PL提交
@@ -58,10 +56,12 @@ dir是数据放置的单元，其下所有数据有一致的备份设置
 ### **3. TrueTime**
 #### API
 TT.now()：返回一个时间段[earliest, latest]，保证被调用的一刻的实际时间处在这个范围内
+
 TT.after(t), TT.before(t)：检查时间t是否已经成为“过去”或仍处在“未来”，即是否小于earliest或大于latest
 
 #### 实现方式
 使用GPS和原子钟来保证TT.now()准确性
+
 *GPS互相同步但易受干扰：原子钟相对稳定但一段时间不同步会导致TT.now()时间段变大（原子钟的频率会有微小差异）
 
 ### **4. Concurrency Control**
