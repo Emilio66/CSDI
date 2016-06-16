@@ -71,8 +71,8 @@
 
 ### Read-Only Txns
     首先，提取所有会被读到的key作为scope，然后分类讨论：
-    1. 如果scope都落在一个Paxos group：将这个RO txn发送给group leader；leader调用LastTS()获取最近的write timestamp作为RO txn的timestamp并执行
-    2. 如果scope跨多个Paxos groups：读取TT.now().latest作为当前RO txn的timestamp并执行
+1. 如果scope都落在一个Paxos group：将这个RO txn发送给group leader；leader调用LastTS()获取最近的write timestamp作为RO txn的timestamp并执行
+2. 如果scope跨多个Paxos groups：读取TT.now().latest作为当前RO txn的timestamp并执行
     *以上两种情况都能保证这次读在所有已全局生效的写之后
 
 ### Schema-Change Txns
