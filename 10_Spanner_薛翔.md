@@ -11,7 +11,7 @@
     SQL：使用广泛，保证ACID；扩展性差，过于通用，调试复杂;
 
     noSQL：最终一致性，扩展性好，动态调整schema；代价是ACID的弱化;
-    
+
     newSQL：强一致性，事务支持，SQL语义和工具，性能好；通用性还是没SQL好
 
 ## Spanner
@@ -108,6 +108,9 @@
 
     Definition: if a transaction T1 commits before another transaction T2 starts, then T1’s commit timestamp is smaller than T2’s.
 
+    [TODO]
+
+
 
 2. How does Spanner achieve the external consistency?
 
@@ -115,6 +118,7 @@
 
     然后，所有需要全局同步的txn需要进行两步提交（2PC）：在prepare阶段调用TrueTime.now()，将这个txn的commit timestamp（记为s）设置为TrueTime.now().latest，从而保证s晚于当前绝对时间之前的所有txn提交时间；然后等待一段时间直到TrueTime.after(s)为true，即此时所有先于s提交的txn都全局同步完成了，再进行commit阶段提交这个txn。
     这样，保证了当前txn提交的timestamp一定大于之前的所有txn，且之前的所有txn都全局可见。
+
 
 
 3. What will happen if the TrueTime assumption is violated? How the authors argue that TrueTime assumption should be correct?
