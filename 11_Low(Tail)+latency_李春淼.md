@@ -127,7 +127,7 @@ Even rare performance hiccups affect a significant fraction of all requests in t
          — Higher bisection bandwidth
          — Lower per-message overheads
          
-### Conslusion
+### Conclusion
 
 - Even rare performance hiccups affect a significant fraction of all requests in large-scale distributed systems
 - Eliminating all sources of latency variability in large-scale systems is impractical, especially in shared environments
