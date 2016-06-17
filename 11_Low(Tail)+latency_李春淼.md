@@ -55,9 +55,13 @@ Even rare performance hiccups affect a significant fraction of all requests in t
 **1.Hedged requests(对冲请求)
 **
   
-        把同样的request发布给多台有data replica的servers，哪个server 响应最快，就使用这个响应结果。（We term such requests “hedged requests” because a client first sends one request to the replica believed to be the most appropriate, but then falls back on sending a secondary request after some brief delay. The client cancels remaining outstanding requests once the first result is received.）
+        把同样的request发布给多台有data replica的servers，哪个server 响应最快，就使用这个响应结果。
+        （We term such requests “hedged requests” because a client first sends one request to the replica 
+        believed to be the most appropriate, but then falls back on sending a secondary request after some 
+        brief delay. The client cancels remaining outstanding requests once the first result is received.）
   
-       *改进版：延迟发送第二次请求（defer sending a secondary request until the first  request has been outstanding for more than the 95th-percentile expected latency for this class of requests.）*
+       *改进版：延迟发送第二次请求（defer sending a secondary request until the first  request has been outstanding
+       for more than the 95th-percentile expected latency for this class of requests.）*
   
        弱点：hedged-requests technique 中可能多台服务器可能不必要地执行相同请求。  
 
@@ -68,7 +72,8 @@ Even rare performance hiccups affect a significant fraction of all requests in t
        弱点：request在servers的服务队列中延迟 
   
        *改进版：先探查remote queues, 把请求发送给最低负载的server
-       弱点：load levels can change between probe and request time；请求服务时间难以估计；clients can create hot spots by all picking the same (least-loaded) server.*
+       弱点：load levels can change between probe and request time；请求服务时间难以估计；clients can create hot spots by 
+       all picking the same (least-loaded) server.*
 
 #### **－ Cross request long-term adaptations（几十秒到分钟级的跨请求长期适应）**
 
