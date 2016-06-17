@@ -14,20 +14,24 @@ dangerous在上面已经说过了，为什么性能突然下降，见第一个�
 - **Why does the performance of ticket lock collapse with a small number of cores? (Hint: cache coherence protocol)** <br />
 
 这是因为在ticket lock中，会需要记录两个变量，一个是now_serving表示正在使用lock的ticket（一个整数），另一个是next_ticket记录着当前最后一张ticket（就是拿票等待的核的号码）。当任何一个核去拿锁的时候，都会需要读取now_serving这个变量判断跟自己的ticket是否相等。这样一来，每个核都会对now_serving做cache，一旦这个锁被释放，ticket lock中的now_serving就会增加1，这个操作会invalidate所有核的cache里的now_serving，这会触发所有的核来重新读取now_serving这个值所在的cacheline，论文说明了在现有的架构中，这个read会被串行化处理，一个一个来，这就导致消耗的时间与等待锁的核的数量呈线性增长关系。
+
 至于为什么会突然发生collapse，大家可以参看3.4的第一个implication。我觉得是说，当很多核想得到同一个锁，并且进入了contend状态之后，一个锁从一个核转移到另一个核的时间是与等待锁的核的数量呈线性关系的，但是这个时间会极大地增加串行部分代码的长度(the length of the serial section),所以当某个锁积累到一定量的waiter，就会突然collapse。
 
 - **To mitigate the performance collapse problem of ticket lock, we can replace it with MCS lock. Please describe the MSC lock algorithm in C.** <br />
 
 mcs_node{
+
       mcs_node next;
       int is_locked;
 }
 
 mcs_lock{ 
+
       mcs_node queue;
 }
 
 function Lock(mcs_lock lock, mcs_node my_node){
+
       my_node.next = NULL;
       mcs_node predecessor = fetch_and_store(lock.queue, my_node);
       //if its null, we now own the lock and can leave, else....
@@ -39,6 +43,7 @@ function Lock(mcs_lock lock, mcs_node my_node){
 }
 
 function UnLock(mcs_lock lock, mcs_node my_node){
+
       //is there anyone to give the lock to?
       if (my_node.next == NULL){
             //need to make sure there wasn't a race here
