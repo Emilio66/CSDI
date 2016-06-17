@@ -15,10 +15,12 @@
 ## Spanner
 ### **1. Overview**
 #### 现状
-不适用于BigTable的应用：“complex, evolving schemas”，或要求所有副本保持强一致性。
-Megastore：poor write throughput
+
+    不适用于BigTable的应用：“complex, evolving schemas”，或要求所有副本保持强一致性。
+    Megastore：poor write throughput
 
 #### 区别于BigTable
+
 - 从简单的key-value store加强到temporal multi-version database；
 - 数据以半关系型的table组织；
 - 支持txn语义；
@@ -42,27 +44,29 @@ Megastore：poor write throughput
 #### Spanserver架构
 ![Figure 2 in paper](img/10_2.png "spannerSoftwareStack")
 
-每个tablet上维护一个Paxos状态机
-写请求由Paxos选出的leader负责；读请求由任一足够up-to-date的replica执行都行
-leader持有lock table来执行2PL提交
-txn mngr负责处理跨Paxos group的txn（2PL）
+    每个tablet上维护一个Paxos状态机
+    写请求由Paxos选出的leader负责；读请求由任一足够up-to-date的replica执行都行
+    leader持有lock table来执行2PL提交
+    txn mngr负责处理跨Paxos group的txn（2PL）
 
 #### Directories
-dir是数据放置的单元，其下所有数据有一致的备份设置
+    
+    dir是数据放置的单元，其下所有数据有一致的备份设置
 
 #### Data Model
+    
     基于directory-bucketed key-value mappings，主键作为key，其他作为value
 
 ### **3. TrueTime**
 #### API
-TT.now()：返回一个时间段[earliest, latest]，保证被调用的一刻的实际时间处在这个范围内
 
-TT.after(t), TT.before(t)：检查时间t是否已经成为“过去”或仍处在“未来”，即是否小于earliest或大于latest
+    TT.now()：返回一个时间段[earliest, latest]，保证被调用的一刻的实际时间处在这个范围内；
+    TT.after(t), TT.before(t)：检查时间t是否已经成为“过去”或仍处在“未来”，即是否小于earliest或大于latest。
 
 #### 实现方式
-使用GPS和原子钟来保证TT.now()准确性
-
-*GPS互相同步但易受干扰：原子钟相对稳定但一段时间不同步会导致TT.now()时间段变大（原子钟的频率会有微小差异）
+    
+    使用GPS和原子钟来保证TT.now()准确性
+    *GPS互相同步但易受干扰：原子钟相对稳定但一段时间不同步会导致TT.now()时间段变大（原子钟的频率会有微小差异）
 
 ### **4. Concurrency Control**
 
@@ -83,22 +87,34 @@ TT.after(t), TT.before(t)：检查时间t是否已经成为“过去”或仍处
 9. 释放锁。
 
 #### Read-Only Txns
-首先，提取所有会被读到的key作为scope，然后分类讨论：
+
+    首先，提取所有会被读到的key作为scope，然后分类讨论：
 
 1. 如果scope都落在一个Paxos group：将这个RO txn发送给group leader；leader调用LastTS()获取最近的write timestamp作为RO txn的timestamp并执行
 2. 如果scope跨多个Paxos groups：读取TT.now().latest作为当前RO txn的timestamp并执行
 
-*以上两种处理都能保证这次读在所有已全局生效的写之后    
+    *以上两种处理都能保证这次读在所有已全局生效的写之后
 
 #### Schema-Change Txns
-通过TT，选取未来的timestamp作为该txn提交时间，记为s；
-所有在s之前的txn正常执行；在s之后的被blocked，直到TT.after(s)==true再执行
 
-## 课后题
+    通过TT，选取未来的timestamp作为该txn提交时间，记为s；
+    所有在s之前的txn正常执行；在s之后的被blocked，直到TT.after(s)==true再执行
+
+## 课后题（仅供参考）
+
 1. What is external consistency? What’s the difference between external consistency and serializability?
+
+    Definition: if a transaction T1 commits before another transaction T2 starts, then T1’s commit timestamp is smaller than T2’s.
 
 
 2. How does Spanner achieve the external consistency?
 
+    首先，Spanner通过巧妙的设计与同步得到TrueTime API，调用时能够获得一个较精确的interval，能保证绝对时间在这个范围内；
+    然后，所有需要全局同步的txn需要进行两步提交（2PC）：在prepare阶段调用TrueTime.now()，将这个txn的commit timestamp（记为s）设置为TrueTime.now().latest，从而保证s晚于当前绝对时间之前的所有txn提交时间；然后等待一段时间直到TrueTime.after(s)为true，即此时所有先于s提交的txn都全局同步完成了，再进行commit阶段提交这个txn。
+    这样，保证了当前txn提交的timestamp一定大于之前的所有txn，且之前的所有txn都全局可见。
+
 
 3. What will happen if the TrueTime assumption is violated? How the authors argue that TrueTime assumption should be correct?
+
+    可能导致txn取得的commit timestamp会小于绝对时间在这之前提交的txn，使得实际发生在之后的txn可见时，之前的txn可能不可见。违反external consistency。
+    “经过测试，我们的TrueTime足够精确，出错的概率非常小。”
