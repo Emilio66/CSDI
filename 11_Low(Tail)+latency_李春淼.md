@@ -23,7 +23,7 @@ latency 存在在 CPU和cache间、网络上的客户端和服务器间、应用
 
 ####latency出现原因（4 个 latency sources）
 
-![](img/11-1.png)
+![](img/11-1.jpg)
 
 - 资源竞争(机器被多应用共享)
 - 倾斜的访问模式（一些纪录更容易被访问到）、
@@ -98,7 +98,7 @@ Even rare performance hiccups affect a significant fraction of all requests in t
 
     — Good-enough schemes（够好就行）：只要有足够数量的sub servers返回结果即可，跳过不必要的子系统提高响应能力（分布式环境下）
                     
-   ![](img/11-2.png)
+   ![](img/11-2.jpg)
    
     — Canary requests(金丝雀请求)：在向所有子服务器发送请求之前，先找一两个测试一下，如成功才发送。（Provide additional safety；Slightly increase in latency：Wait for single or two servers to respond is much less variable than in the large fan-out settings）
 
