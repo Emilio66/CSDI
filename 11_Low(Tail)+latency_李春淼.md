@@ -67,7 +67,9 @@ Even rare performance hiccups affect a significant fraction of all requests in t
 
 **2.Tied request（关联请求）（基于hedged request的优化）**
 
-       不是选择把request发送给哪台 server，而是直接把请求同时放置在多台服务器的服务队列上，允许服务器彼此交流这个请求的服务更新状态。 把允许服务器执行跨服务器状态更新的请求称为“tied requests.”。最简单的形式就是在发送一个request的同时，绑定发送给其他服务器的编号tag。当一个请求开始执行的时候，就可通过tag告知其他服务器中止执行该请求，其他服务器的服务队列中如果还有这个request，则直接将其移除或降低优先级。
+       不是选择把request发送给哪台 server，而是直接把请求同时放置在多台服务器的服务队列上，允许服务器彼此交流
+       这个请求的服务更新状态。 把允许服务器执行跨服务器状态更新的请求称为“tied requests.”。最简单的形式就是在发送一个request的同时，绑定发送给其他服务器的编号tag。当一个请求开始执行的时候，
+       就可通过tag告知其他服务器中止执行该请求，其他服务器的服务队列中如果还有这个request，则直接将其移除或降低优先级。
      
        弱点：request在servers的服务队列中延迟 
   
@@ -81,15 +83,18 @@ Even rare performance hiccups affect a significant fraction of all requests in t
 
 
        产生远多于现存机器数的细小的分区，进行动态分配partitions，保证这些机器上的负载均衡，例如
-    （Tablets in BigTable，typically each machine managing 20 ~ 1,000 tablets），也提升了容错恢复速度；virtual server partition, virtual processor partition）
+    （Tablets in BigTable，typically each machine managing 20 ~ 1,000 tablets），也提升了容错恢复速度；
+    virtual server partition, virtual processor partition）
     
 **2.Selective Replication（选择性复制）（微划分的增强版）**
 
-       预测可能的负载不均衡，创造额外的复制品（例如Google’s web search system will make additional copies of popular and important documents in multiple micro-partitions）
+       预测可能的负载不均衡，创造额外的复制品（例如Google’s web search system will make additional 
+       copies of popular and important documents in multiple micro-partitions）
 
 **3.Latency-induced Probation（延迟引导的探查）**
 
-       观察不同机器，暂时排除特别慢的机器，对excluded servers继续发送shadow请求，一旦发现问题减缓，把这些排除掉的机器再合并进来。
+       观察不同机器，暂时排除特别慢的机器，对excluded servers继续发送shadow请求，一旦发现问题减缓，
+       把这些排除掉的机器再合并进来。
         
        弱点（违反直觉的）：在高负载的情况下，从一个live system中移除一个server实际上提高了延迟
        
