@@ -13,8 +13,7 @@
 ##Motivation & Intro.
 DRAM常被用作数据的缓存，但是Cache miss和backing store overhead都让DRAM的潜能无法激发出来。
 
--->因此论文作者设计了RAMCloud，它把所有的数据都置于DRAM中（这样不会出现Cache miss），又因为存储是durable的，所以
-不需要额外地管理backing store。
+-->因此论文作者设计了RAMCloud，它把所有的数据都置于DRAM中（这样不会出现Cache miss）。
   
 RAMCloud的核心就是提供`durability & availability`
 
@@ -39,7 +38,7 @@ RAMCloud管理replica是通过，在中DRAM只保存每个object的一个备份�
 因此，RAMCloud还是选择把数据备份到二级存储中。
 
 ##Log-structured storage
-上面提到了RAMCloud管理replica的策略，并且产生了两个问题。为了解决这两个问题，RAMCloud采用了log-structured的方式进行存储。
+上面提到了RAMCloud管理replica的策略，并且产生了两个问题(disk写入慢和恢复慢的问题)。为了解决这两个问题，RAMCloud采用了带buffer 的log-structured的方式解决了disk写入慢的问题，而恢复慢的问题利用了scaling解决，后面会仔细提到。
 
 如上面图片所示，RAMCloud的存储的过程是当一个master接收到写请求，它将要写入的object append到内存里的log中，然后再将log entry通过网络分发到各个backup去。backup将接收到的信息buffer到内存中，然后立即向master返回一个RPC请求，而不需要立即写入到disk。master接收到backup的请求之后，向client返回。对于backup，在buffer满了之后才将buffer的数据写入disk。
 
@@ -57,8 +56,6 @@ RAMCloud管理replica是通过，在中DRAM只保存每个object的一个备份�
 综上，log-structure的实现解决了RAMCloud管理replica的策略带来的第一个问题，并且它有***优点***在于充分利用sequential I/O带宽，避免了高延迟。而***缺点***在于，需要定期地对log进行cleaning操作。
 
 ##Recovery
-
-由于RAMCloud是将数据存储在DRAM中，所以由于DRAM的容失性RAMCloud的错误恢复需要做到low latency。
 
 ###Using scaling
 在论文中，argue了三种方法，分别是disk、CPU带来的bottleneck等等。
