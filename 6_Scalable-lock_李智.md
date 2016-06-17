@@ -1,7 +1,10 @@
 ## 提出的新技术、为什么要提出、解决什么问题、优缺点是什么、challenge、技术细节
 这篇文章就是提出了non-scalable lock是不好的，提出要用scalable lock提到前者，没有新技术，之前两者都是有的。
+
 原因是non-scalable lock哪怕在N个核的时候表现不错，也很有可能在N+1或者N+2个核的时候突然collapse。
+
 scalable lock解决的就是这个问题，优点就是不会产生这种突然的大幅度的collapse，锁的性能不会随着核的数量增加而下降太大。缺点就是要对现有的源代码做改动，但是改动并不复杂。
+
 技术细节见第二个课后题。
 
 ## 助教提供的复习点：为什么non-scalable lock是dangerous的？性能为什么会突然下降?
