@@ -68,7 +68,8 @@ Even rare performance hiccups affect a significant fraction of all requests in t
 **2.Tied request（关联请求）（基于hedged request的优化）**
 
        不是选择把request发送给哪台 server，而是直接把请求同时放置在多台服务器的服务队列上，允许
-       服务器彼此交流这个请求的服务更新状态。 把允许服务器执行跨服务器状态更新的请求称为“tied requests.”。最简单的形式就是在发送一个request的同时，绑定发送给其他服务器的编号tag。
+       服务器彼此交流这个请求的服务更新状态。 把允许服务器执行跨服务器状态更新的请求称为“tied requests.”。
+       最简单的形式就是在发送一个request的同时，绑定发送给其他服务器的编号tag。
        当一个请求开始执行的时候，就可通过tag告知其他服务器中止执行该请求，其他服务器的服务队列中
        如果还有这个request，则直接将其移除或降低优先级。
      
