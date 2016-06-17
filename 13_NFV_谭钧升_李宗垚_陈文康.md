@@ -81,4 +81,33 @@ Click是一个能够灵活配置的软件路由结构。它是由一系列包处
 
  
 ##课后题解答
+1.	Why must Click provide both `push' and `pull' methods? Can we eliminate one of the two operations? How/Why?
+
+Push and pull are duals of one another: the upstream end of a connection initiates a push call, while the downstream end initiates a pull call. Together, push and pull allow the appropriate end of a connection to initiate packet transfer, solving several router control flow problems. For example, packet scheduling decisions— choosing which queue to ask for a packet—are easily expressed as composable pull elements, as we show in Section 4.1. As another example, the system should not send packets to a busy transmitting interface. If it did, the interface would have to store the packet, and the router would lose the ability to affect it later (to throw it away, to modify its precedence, and so forth). This restriction can be simply expressed by giving the transmitting interface a pull input; then the interface is in control of packet transfer, and can ask for packets only when it’s ready.
+
+ push和pull是Click里elements直接的两种连接方式。 Push是从源Element到下游的元素，通过事件触发，比如有包到达。在Push连接方式里，上游的元素会提交一个包到下游的元素； Pull是从目的地元素到上游元素。在Pull的连接方式里，是下游的元素发送包请求到上游的元素。Push和pull的共同使用可以使包转发连接的适当终止，可以很好地解决路由器控制流问题。例如包调度的决定——选择哪个队列去请求一个包对于组合的pull元素来说是非常容易实现的。另外，系统不应该向繁忙的转发接口发送包，否则，这个接口就必须存储包，并且路由器会失去处理这些包的能力（丢弃，修改优先级等）。这个约束可以由简单的给转发接口一个pull输入实现。然后这个接口就可以控制包转发，并且可以在它准备好的时候请求包。
+ 
+With pull processing, a packet scheduler can be implemented in Click as a single element that maintains only local knowledge of the router configuration.
+
+通过pull处理，一个维护本路由配置简单的click元素就可以实现包的调度器。
+
+普通的路由器的实现只需要通过push操作就可以实现了，但是只实现push操作对于click来说，会带来包调度方面的巨大的复杂性，而通过实现pull操作，就可以通过一个简单的pull元素或者pull元素与队列的组合实现复杂的调度策略，pull操作对于click来说是必须的。
+
+2.	One limitation of Click is the difficulty of scheduling CPU time among pull and push paths. Why is it difficult? What would you do to improve it? 
+
+	We have not yet fully investigated how to schedule CPU time among competing push and pull paths, a problem that arises whenever multiple devices simultaneously receive or are ready to send packets. Currently, Linux handles much of this scheduling, and the work list described in the next section controls the rest. Eventually all of it should be controlled by a single mechanism. 
+	
+Work list. A lightweight work list can be used to schedule Click elements for later processing. It is effectively a simple, single-priority CPU scheduler, and is run after every 8th input packet or whenever there are no more input packets. Queues and Shapers currently use the work list to delay packet upstream notification . This improves i-cache performance: under high load, 8 packets will be enqueued before the work list is run and pull processing begins.
+	Click通过一个任务队列对CPU资源进行调度，一个组件在同一时间通过循环方式从任务队列中获取一个任务。然而，大多数组件从不被放到任务队列中，当它们的下推或上拉方法被调用时它们才被调度。如果组件如果经常初始化下推或上拉请求而得不到应答，那么它应该被放入到消息队列中。Click当前运行在一个单线程上，任何数据包传输函数必须在下一个任务开始前返回到调用它的函数那里。路由器继续处理每一个下推数据包，直到它被存储或者丢弃，因此，在一个配置图中队列的位置决定了它以何种方式进行CPU调度。而不是只通过单一的机制进行调度的
+	
+	第二问是开放性问题，没有具体答案。在这里认为可以对组件的配置信息进行静态的分析或者进行多线程的调度支持。
+	
+3.	How can batch processing be applied to Click? Be specific and consider the impact on latency and throughput.
+
+这一题是开放性问题，没有具体答案。
+
+A、 Batch Operation:
+I/O Batching. packet I/O batching can be accomplished by using psio. It passes the received packets in large batches to the user-level Click. By default, individually-transmitted packets are queued at the end of processing path up to the batch size. When computation batching is applied, the group of packets processed together is immediately sent out to NICs. 
+Computation Batching. We can apply batching to the intermediate elements between the packet source and sink. The received pack is passed down to the processing path, being handled by elements in the middle. Each element takes it and applies their operations by iterating over the packets in the same pack. 
+B、Impact: Since the performance heavily depends on the size of a pack, If we set buffer size too large, the throughput will improve with some more latency.
 
