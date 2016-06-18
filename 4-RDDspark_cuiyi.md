@@ -100,13 +100,13 @@ Spark中RDD的内部接口：
 
 
 ![](img/4_system_2.jpg)
-有两种dependency，每个parent RDD最多被一个child RDD用到，叫做narrow dependency；会被多个RDD用到，叫做wide dependency
+- 有两种dependency，每个parent RDD最多被一个child RDD用到，叫做narrow dependency；会被多个RDD用到，叫做wide dependency
 
 ![](img/4_system_3.jpg)
-每个stage包含尽可能多的narrow dependency，构成一个stage，stage之间的关系构成一个有向无环图,系统会对这个DAG进行优化
+- 每个stage包含尽可能多的narrow dependency，构成一个stage，stage之间的关系构成一个有向无环图,系统会对这个DAG进行优化
 
 ![](img/4_system_1.jpg)
-不同的task被TaskScheduler进行分配，给不同的节点进行执行
+- 不同的task被TaskScheduler进行分配，给不同的节点进行执行
 
 ##作业题：
 
