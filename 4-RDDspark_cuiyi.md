@@ -33,8 +33,8 @@ RDD是一个数据模型，可以把RDD理解成Spark当中的一种数据结构
 
 ###RDD（Spark）提供的接口:
 
-1. transformation:
-
+####1. transformation:
+这些操作创建一个RDD或者转换出一个新的RDD
 - map:
 对RDD中的每个元素都执行一个指定的函数来产生一个新的RDD
 - reduce:
@@ -44,7 +44,7 @@ RDD是一个数据模型，可以把RDD理解成Spark当中的一种数据结构
 - flatMap：
 与map类似，区别是经map处理后只能生成一个元素，而经flatmap处理后可生成多个元素来构建新RDD
 
-2. action:
+####2. action:
 这些操作给应用程序返回一个结果或者向存储系统中写入数据
 - count:
 返回数据集中元素的个数
