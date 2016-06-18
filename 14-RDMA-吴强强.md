@@ -43,9 +43,9 @@
     + Synchroinzed Time提供分布式的时间服务
     + 验证锁是否Expired: now > lease_end_time + DELTA
     + 验证锁是否可用: now < lease_end_time - DELTA
-    + \(..., lease_end_time - DELTA\): 此范围内, 表示仍然持有读锁
+    + \(..., lease_end_time - DELTA\): 当前时间在此范围内, 表示仍然持有读锁
     + \[lease_end_time - DELTA, lease_end_time + DELTA\], 此为误差范围, 必须避开它
-    + \(lease_end_time + DELTA, ...\): 此范围内, 表示已经过期
+    + \(lease_end_time + DELTA, ...\): 当前时间在此范围内, 表示已经过期
 + 实现: RDMA CAS
 
 ### 只读事务
@@ -77,12 +77,13 @@
         + 放锁
         + 写回
     + 注意: 以上操作需要记Log, 以应对错误情况
+
 ### 重点强调
 + 冲突检测
     + 对于同样使用了HTM的两个事务, HTM保证它们的before-or-after
-    + 对于一个已经存储的HTM事务(读ab, 写cd), 如果另一个远程事务需要访问abcd, 则需要先用RDMA加锁, 并把数据读回来, 加锁过程会abort已有的HTM事务, 从而后面的这个远程事务会先发生. 之前的HTM事务需要重试
+    + 对于一个已经存在的HTM事务(读ab, 写cd), 如果另一个远程事务需要访问abcd, 则需要先用RDMA加锁, 并把数据读回来, 加锁过程会abort已有的HTM事务, 从而后面的这个远程事务会先发生. 之前的HTM事务需要重试
     + 对于两个远程事务, 锁会保证其先后
-    + 所有只读事务都当作远程事务来处理
+    + 所有只读事务都当作远程事务来处理(使用加锁来保证顺序)
 + HTM + 读写锁机制等价于2PL, 从而, 可以保证Serializability
     + 具体证明见2.4
 
@@ -110,7 +111,7 @@
 
 ## 其他实现细节
 + Synchroinzed Time
-    + 理想情况是使用TrueTime API
+    + 理想情况是使用TrueTime API(From Spanner)
     + 论文中使用的是PTP
     + 每个Node上, 一个timer thread会周期性同步software time, 其他线程直接用
 + Fallback Handler是如何保证Serializability的
@@ -118,7 +119,7 @@
 
 # 课后习题
 + How does DrTM detect conflicts between remote reads and local writes?
-    + Local writes会被包裹在HTM中. 远程reads使用的RDMA会打断本地HTM, 从而避免了冲突 
+    + Local writes会被包裹在HTM中. 远程reads使用的RDMA会打断本地HTM, 从而避免了冲突
 + Why DrTM has the deadlock issue and how does it avoid the deadlock?
     + 在fallback handler中会出现, 详见上文事务层中fallback实现
 + What’s the limitation of DrTM?
