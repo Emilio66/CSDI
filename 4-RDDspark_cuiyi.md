@@ -33,7 +33,7 @@ RDD是一个数据模型，可以把RDD理解成Spark当中的一种数据结构
 
 ###RDD（Spark）提供的接口:
 
-1. 定义及创建RDD的接口(transformation):
+1. transformation:
 
 - map:
 对RDD中的每个元素都执行一个指定的函数来产生一个新的RDD
@@ -43,7 +43,8 @@ RDD是一个数据模型，可以把RDD理解成Spark当中的一种数据结构
 对之前的RDD进行筛选
 - flatMap：
 与map类似，区别是经map处理后只能生成一个元素，而经flatmap处理后可生成多个元素来构建新RDD
-2. 使用RDD的接口(action):
+
+2. action:
 这些操作给应用程序返回一个结果或者向存储系统中写入数据
 - count:
 返回数据集中元素的个数
@@ -63,7 +64,6 @@ Spark中RDD的内部接口：
 - iterator(p, parentIters)：
 按照父分区的迭代器，逐个计算分区p的元素
 - partitioner():
-
 返回RDD是否被hash/range分区的元数据信息
 
 
