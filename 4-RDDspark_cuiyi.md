@@ -11,13 +11,19 @@
 提出了Resilient Distributed Dataset，以及基于RDD计算模型的Spark。可以在大规模的计算集群上面运行in-memory computing的算法，以及基于coarse-grained transformation。如果一个RDD的partition丢失了，就根据lineage重新计算一个partition出来。
 
 
-RDD: 
-弹性分布式数据集,RDD是只读的、分区的记录集合。这个数据集的全部或者部分可以缓存在内存中，以便在迭代计算的时候可以重复利用，减少了I/O的开销，当内存不够时，可以与磁盘进行交换。用户可以显式地指定哪一部分分区的数据可以缓存在内存中，以及内存不够时缓存这些分区的优先级。RDD只能通过对稳定物理存储中的数据或者其他已有的RDD执行一些确定性操作来创建。这些操作被称作transformation，常见的transformation包括map, filter,join等
-一个RDD有足够的信息(lineage)关于它自身是如何从其他数据集或其他RDD衍生而来的，使用这些信息，利用稳定存储中的数据可以再次计算出这个RDD中的分区。
+###RDD的概念: 
+RDD是一个数据模型，可以把RDD理解成Spark当中的一种数据结构，对于Spark的操作都是对于RDD这种数据结构的操作
+
+###RDD的特点
+RDD是只读的、分区的记录集合。这个数据集的全部或者部分可以缓存在内存中，以便在迭代计算的时候可以重复利用，减少了I/O的开销，当内存不够时，可以与磁盘进行交换。用户可以显式地指定哪一部分分区的数据可以缓存在内存中，以及内存不够时缓存这些分区的优先级。RDD只能通过对稳定物理存储中的数据或者其他已有的RDD执行一些确定性操作来创建。这些操作被称作transformation，常见的transformation包括map, filter,join等
+一个RDD有足够的信息(lineage)
+
+###RDD的优点
+关于它自身是如何从其他数据集或其他RDD衍生而来的，使用这些信息，利用稳定存储中的数据可以再次计算出这个RDD中的分区。
 用户可以显式地指定RDD的存储方式和分区方式：比如指定哪个RDD会被重用，指定一个RDD是存在磁盘中还是内存中；决定RDD中的元素按照某个key来划分，及其划分的方式等。
 RDD具有很好的容错机制，Spark可以根据lineage的信息重建丢失的RDD分区，而不需在各个结点之间拷贝大量的数据副本。
 
-Spark提供的接口:
+###RDD（Spark）提供的接口:
 Spark中RDD的操作：
 1、定义及创建RDD的接口(transformation):
 map, filter
@@ -48,9 +54,9 @@ Pregel,Twister和HaLoop支持迭代的运算。然而这些框架只是对他们
 
 一些系统提供了共享可变状态，通过它来允许用户执行内存计算。比如Piccolo使得用户可以运行并行函数来读和更新分布式hash表中的元素。分布式共享内存系统(DSM)和RAMCloud也提供了类似的模型。但是Piccolo和DSM提供的接口只能读或者更新表中的元素。而RDD提供了更高等级的编程接口，这些接口基于map,sort,join等算子。另一方面Piccolo和DSM只能通过设置检查点和回滚来实现错误恢复，这样的开销远比RDD中基于lineage的恢复机制的开销要高得多。RDD只需要将lineage的信息做log，当分区丢失的时候，通过lineage可以重新计算出丢失的分区。此外，由于RDD是不可变的，这一特性有助于缓解缓慢结点(stragglers)的情况——可以复制一份slow task的副本然后在其他结点上运行。
 
-论文中代码的执行：
+###论文中代码的执行：
 
-一、
+####一、
 
 ![](img/4_code1.1.png)
 
@@ -61,7 +67,7 @@ Pregel,Twister和HaLoop支持迭代的运算。然而这些框架只是对他们
 第三行将error RDD保留在内存中，以便于它可以被跨查询共享。Spark会将error的分区保存在内存中
 然后对error RDD再次过滤出包含"HDFS"的数据项，然后筛选出以制表符分隔的第三个字段。Spark调度器会将这些transformation指令发送给缓存着errors分区的结点。最后将结果记录返回。
 
-二、逻辑回归
+####二、逻辑回归
 
 ![](img/4_code2.png)
 
@@ -69,7 +75,7 @@ Pregel,Twister和HaLoop支持迭代的运算。然而这些框架只是对他们
 随机生成一个向量赋给w
 在缓存有points RDD的结点中反复调用map和reduce转换，在每一步的迭代中利用w的函数计算gradient的值。然后将w与gradient的值相减得到新的w，带入下一次迭代。迭代多次后，w会收敛，得到最终的结果。
 
-三、PageRank
+####三、PageRank
 
 ![](img/4_code3.png)
 
