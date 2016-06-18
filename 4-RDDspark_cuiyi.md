@@ -1,6 +1,6 @@
 
 
-#ResilientDistributedDataset  Spark 
+#RDD / Spark 
 
 
 ##现有模式存在的问题：
@@ -80,6 +80,14 @@ partitioner():返回RDD是否被hash/range分区的元数据信息
 首先将图分解成url和它所指向的链接的对组成的RDD links，然后将这个RDD缓存在内存中
 随机初始化一个url和它所对应的rank值组成的RDD ranks。
 构建一个contribs RDD，该RDD包含了url以及指向它的url对其rank值所做的贡献。在每一步的迭代中都用links和当前ranks的值更新contribs的值，然后再用计算得到的contribs的值更新ranks的值，然后进行下一次迭代。迭代多次后，ranks的值会收敛。每一步迭代都会更新ranks的值，因此为了减少错误恢复的时间，用户可以在迭代一定次数后将ranks的值写入到磁盘做备份，这样以来当ranks的分区丢失时，就不需要从头开始迭代计算了。此外，可以人为地将links RDD根据URL在结点之间进行分区，然后将ranks按照同样的方式进行分区，这样以来在join的时候就不需要跨结点进行通讯了。Spark将每个url当前的贡献值发送到它的link lists所在的机器结点上，在那些结点机器上计算对应的URL的新的rank值，然后再与其link lists做join，依此类推。迭代多次后ranks值会收敛。
+
+###系统流程
+![](img/4_system_1.jpg)
+
+![](img/4_system_2.jpg)
+
+![](img/4_system_3.jpg)
+
 
 ##作业题：
 
