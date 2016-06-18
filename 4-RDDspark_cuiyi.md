@@ -37,8 +37,6 @@ RDD是一个数据模型，可以把RDD理解成Spark当中的一种数据结构
 这些操作创建一个RDD或者转换出一个新的RDD
 - map:
 对RDD中的每个元素都执行一个指定的函数来产生一个新的RDD
-- reduce:
-将RDD中元素两两传递给输入函数，同时产生一个新的值，新产生的值与RDD中下一个元素再被传递给输入函数直到最后只有一个值为止
 - filter:
 对之前的RDD进行筛选
 - flatMap：
@@ -46,6 +44,8 @@ RDD是一个数据模型，可以把RDD理解成Spark当中的一种数据结构
 
 ####2. action:
 这些操作给应用程序返回一个结果或者向存储系统中写入数据
+- reduce:
+将RDD中元素两两传递给输入函数，同时产生一个新的值，新产生的值与RDD中下一个元素再被传递给输入函数直到最后只有一个值为止
 - count:
 返回数据集中元素的个数
 - collect:
@@ -119,7 +119,7 @@ Spark中RDD的内部接口：
 ###2.Describe the pros and cons of lineage and checkpoint?
 
 - lineage的优点：
-一个RDD通过lineage记录它如何从其他RDD转化而来，如果一个RDD出错，就可以通过lineage的链进行还原。
+一个RDD通过lineage记录它如何从其他RDD转化而来，如果一个RDD出错，就可以通过lineage的链进行还原。而且因为lineage记录的是数据之间的变化而不是数据本身，所以在不同的节点之间传输数据速度更快。
 - lineage的缺点：
 如果有一个任务计算时间需要很长，而中间发生错误，如果使用lineage的方法的话需要从头开始进行计算，额外开销会比较大。
 - Checkpoint优点：
