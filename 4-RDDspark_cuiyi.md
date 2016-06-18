@@ -4,20 +4,22 @@
 
 
 ##现有模式存在的问题：
-现在处理大数据的很多计算架构处理某些问题的时候效率比较低，尤其是对于需要迭代计算和交互计算的应用。因为现有的算法不是in-memory computing的，很多大数据的算法都需要重用中间结果，在中间结果的基础上进行计算，而处理这类问题的时候，之前的解决方只能是向外部的storage输出计算的中间结果，这就因为disk I/O的限制，性能非常的不理想
-也有很多框架着手解决这一问题，而最大的障碍在于怎样对于in-memory computing做到faultTolerant，而现有的方法是在节点之间做数据的备份或者是log的备份，效率就大大降低了
+在Spark之前，很多大数据的计算架构效率比较低，尤其是对于需要迭代计算和交互计算的应用，因为之前的架构不是in-memory computing的，而很多大数据的算法都需要重用中间结果，在中间结果的基础上进行计算，所以处理这类问题的时候，之前的解决方只能是向外部的storage输出计算的中间结果，这就因为disk I/O的限制，导致性能的问题，虽然也有很多框架着手解决这一问题，但没法高效地解决诸如faultTolerance的问题
 
 ##本文的解决的方案：
-提出了Resilient Distributed Dataset，以及基于RDD计算模型的Spark。可以在大规模的计算集群上面运行in-memory computing的算法，以及基于coarse-grained transformation。如果一个RDD的partition丢失了，就根据lineage重新计算一个partition出来。
+提出了Resilient Distributed Dataset，以及基于RDD计算模型的Spark。可以在大规模的计算集群上面运行in-memory computing的算法，和基于coarse-grained transformation。
 
 
 ###RDD的概念: 
-RDD是一个数据模型，可以把RDD理解成Spark当中的一种数据结构，对于Spark的操作都是对于RDD这种数据结构的操作
+RDD是一个数据模型，可以把RDD理解成Spark当中的一种数据结构，Spark当中的操作都是对于RDD这种数据结构的操作
 
 ###RDD的特点
-1.RDD是只读的、分区的记录集合。一个RDD只能从另一个RDD或者源数据修改过来，而不能对一个RDD进行修改
+
+#####1. RDD是只读的，分区的记录集合。
+一个RDD只能从另一个RDD或者源数据修改过来，而不能对一个RDD进行修改
 通过并行转换的方式来创建（如map, filter, join）
-2.RDD支持两种操作： 转换（ transformation ） 从现有的数据集创建一个新的数据集；而 动作（actions） 在数据集上运行计算后，返回一个值给驱动程序。Spark中的所有转换都是惰性的，也就是说，他们并不会直接计算结果。相反的，它们只是记住应用到基础数据集（例如一个文件）上的这些转换动作。只有当发生一个要求返回结果给Driver的动作时，这些转换才会真正运行。
+#####2. RDD支持两种操作： 转换和动作
+转换（ transformation ） 从现有的数据集创建一个新的数据集； 动作（actions）是在数据集上运行计算后，返回一个值给驱动程序。Spark中的所有转换都是惰性的，也就是说，他们并不会直接计算结果。相反的，它们只是记住应用到基础数据集（例如一个文件）上的这些转换动作。只有当发生一个要求返回结果给Driver的动作时，这些转换才会真正运行。
 
 ###RDD的优点
 ####1.In-memory computing
@@ -30,26 +32,39 @@ RDD是一个数据模型，可以把RDD理解成Spark当中的一种数据结构
 系统可以对RDD进行划分和安排，这就可以利用计算几点的locality来提高计算性能；在内存不够的时候，那些大的、没有被特别指定的RDD会被降级，写到硬盘里面，这个时候性能会有所下降但不会低于Mapreduce
 
 ###RDD（Spark）提供的接口:
-Spark中RDD的操作：
-1、定义及创建RDD的接口(transformation):
-map, filter
-flatMap
-union,join,sample
-sort, partitionBy
-2、使用RDD的接口(action):
-这些操作给应用程序返回一个结果或者向存储系统中写入数据
-count:返回数据集中元素的个数
-collect:返回元素本身
-reduce
-save:向存储系统写入数据集
-persist:指定以后要复用的RDD，spark默认将要复用的RDD放在内存中
 
+####1. transformation:
+这些操作创建一个RDD或者转换出一个新的RDD
+- map:
+对RDD中的每个元素都执行一个指定的函数来产生一个新的RDD
+- reduce:
+将RDD中元素两两传递给输入函数，同时产生一个新的值，新产生的值与RDD中下一个元素再被传递给输入函数直到最后只有一个值为止
+- filter:
+对之前的RDD进行筛选
+- flatMap：
+与map类似，区别是经map处理后只能生成一个元素，而经flatmap处理后可生成多个元素来构建新RDD
+
+####2. action:
+这些操作给应用程序返回一个结果或者向存储系统中写入数据
+- count:
+返回数据集中元素的个数
+- collect:
+返回元素本身
+- save:
+向存储系统写入数据集
+- persist:
+指定以后要复用的RDD，spark默认将要复用的RDD放在内存中
 Spark中RDD的内部接口：
-partitions()：返回一组Partition对象
-preferredLocations(p):根据数据存放的位置，返回分区p在哪些节点访问更快
-dependencies():返回一组依赖
-iterator(p, parentIters)：按照父分区的迭代器，逐个计算分区p的元素
-partitioner():返回RDD是否被hash/range分区的元数据信息
+- partitions()：
+返回一组Partition对象
+- preferredLocations(p):
+根据数据存放的位置，返回分区p在哪些节点访问更快
+- dependencies():
+返回一组依赖
+- iterator(p, parentIters)：
+按照父分区的迭代器，逐个计算分区p的元素
+- partitioner():
+返回RDD是否被hash/range分区的元数据信息
 
 
 ###论文中代码的执行：
@@ -82,20 +97,24 @@ partitioner():返回RDD是否被hash/range分区的元数据信息
 构建一个contribs RDD，该RDD包含了url以及指向它的url对其rank值所做的贡献。在每一步的迭代中都用links和当前ranks的值更新contribs的值，然后再用计算得到的contribs的值更新ranks的值，然后进行下一次迭代。迭代多次后，ranks的值会收敛。每一步迭代都会更新ranks的值，因此为了减少错误恢复的时间，用户可以在迭代一定次数后将ranks的值写入到磁盘做备份，这样以来当ranks的分区丢失时，就不需要从头开始迭代计算了。此外，可以人为地将links RDD根据URL在结点之间进行分区，然后将ranks按照同样的方式进行分区，这样以来在join的时候就不需要跨结点进行通讯了。Spark将每个url当前的贡献值发送到它的link lists所在的机器结点上，在那些结点机器上计算对应的URL的新的rank值，然后再与其link lists做join，依此类推。迭代多次后ranks值会收敛。
 
 ###系统流程
-![](img/4_system_1.jpg)
+
 
 ![](img/4_system_2.jpg)
+- 有两种dependency，每个parent RDD最多被一个child RDD用到，叫做narrow dependency；会被多个RDD用到，叫做wide dependency
 
 ![](img/4_system_3.jpg)
+- 每个stage包含尽可能多的narrow dependency，构成一个stage，stage之间的关系构成一个有向无环图,系统会对这个DAG进行优化
 
+![](img/4_system_1.jpg)
+- 不同的task被TaskScheduler进行分配，给不同的节点进行执行
 
 ##作业题：
 
 
-###1.What are the advantages of spark compared to MapReduce?
-1. Spark 在内存中处理数据，而 Hadoop MapReduce 是通过 map 和 reduce 操作在磁盘中处理数据，所以处理某一些应用Spark比Mapreduce效率要高。
-2. 使用Mapreduce的时候需要将原来的算法转化并且分解为Map和Reduce，相比之下增加了编程的难度，尤其是很多问题并不适合这样来解决。
-3. Spark支持多种多种语言以及很多现有的算法，能够很方便的进行整合以及快速地进行开发。
+###1.What are the advantages of Spark compared to MapReduce?
+1. 性能：MapReduce在使用Map和Reduce计算完成之后，必须要写到磁盘上等待下一个MapReduce计算，带来大量的磁盘读写而降低性能；而Spark在将数据读入内存中后可以一直在内存中处理数据；Spark也实现了很多的优化，对于很多应用来说，Spark比MapReduce效率要高。
+2. 易用性：使用Mapreduce的时候需要将原来的算法转化为Map和Reduce操作，Job之间的依赖关系由开发者自己管理，相比之下增加了编程的难度，尤其是很多问题并不适合这样来解决。而Spark提供多种接口，可以自动处理Stage之间的关系，使得编程更加简单。
+
 
 ###2.Describe the pros and cons of lineage and checkpoint?
 
@@ -110,8 +129,8 @@ partitioner():返回RDD是否被hash/range分区的元数据信息
 
 ###3.Describe which applications are RDD suitable for and not suitable for?
 
-1. RDD适合计算使对内存需要比较小的，需要进行迭代计算的应用。尤其适合应对批处理命令比较多的应用，在对同样的数据集进行相同的操作的情况下优势会比较的明显。
-2. RDD不适合对内存比较大的，需要不断从存储器读取数据的应用，尤其是那些需要异步地，细粒度地修改共享数据的应用，会显著地降低计算的效率。
+- RDD适合计算时对内存需要比较小的，需要进行迭代计算的应用。尤其适合应对批处理命令比较多的应用，在对同样的数据集进行相同的操作的情况下优势会比较的明显。
+- RDD不适合对内存需求比较大的，需要不断从存储器读取数据的应用，尤其是那些需要异步地，细粒度地修改共享数据的应用，会显著地降低计算的效率。
 
 
 
