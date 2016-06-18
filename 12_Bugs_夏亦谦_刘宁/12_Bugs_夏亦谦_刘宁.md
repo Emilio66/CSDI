@@ -58,9 +58,10 @@ STACK会在Assumption Δ被允许和不允许的情况下分别模拟编译。
 * 对于程序员来说，通过fix bug或者去掉一些会被编译器当做是undefined behavior的代码；
 * 对于编译器来说，可以集成一些现有的bug-finding的工具，或者利用STACK的方式来判定unstable code。
 
-
-
-
+###STACK为了更好的扩展性，做了什么权衡？
+1. STACK为了使可扩展性更高，在计算Δ = ∀e:Reach(e) → ¬Undef(e)的时候做了一些近似运算，使最后得到的结果可能会漏掉一些unstable code。  
+2. STACK为了简化和滤过某些查询用到的constraint solver如果发生了timeout，也会出现漏报的情况。  
+因此，STACK为了更好地扩展性，牺牲了一定的可靠性（精度）。
 
 
 
