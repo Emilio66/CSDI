@@ -16,10 +16,10 @@ RDD是一个数据模型，可以把RDD理解成Spark当中的一种数据结构
 ###RDD的特点
 
 1. RDD是只读的，分区的记录集合。
-一个RDD只能从另一个RDD或者源数据修改过来，而不能对一个RDD进行修改
+- 一个RDD只能从另一个RDD或者源数据修改过来，而不能对一个RDD进行修改
 通过并行转换的方式来创建（如map, filter, join）
 2. RDD支持两种操作： 转换和动作
-转换（ transformation ） 从现有的数据集创建一个新的数据集；而 动作（actions） 在数据集上运行计算后，返回一个值给驱动程序。Spark中的所有转换都是惰性的，也就是说，他们并不会直接计算结果。相反的，它们只是记住应用到基础数据集（例如一个文件）上的这些转换动作。只有当发生一个要求返回结果给Driver的动作时，这些转换才会真正运行。
+- 转换（ transformation ） 从现有的数据集创建一个新的数据集； 动作（actions）是在数据集上运行计算后，返回一个值给驱动程序。Spark中的所有转换都是惰性的，也就是说，他们并不会直接计算结果。相反的，它们只是记住应用到基础数据集（例如一个文件）上的这些转换动作。只有当发生一个要求返回结果给Driver的动作时，这些转换才会真正运行。
 
 ###RDD的优点
 ####1.In-memory computing
@@ -43,44 +43,26 @@ RDD是一个数据模型，可以把RDD理解成Spark当中的一种数据结构
 对之前的RDD进行筛选
 - flatMap：
 与map类似，区别是经map处理后只能生成一个元素，而经flatmap处理后可生成多个元素来构建新RDD
-
 2. 使用RDD的接口(action):
-
 这些操作给应用程序返回一个结果或者向存储系统中写入数据
 - count:
-
 返回数据集中元素的个数
-
--collect:
-
+- collect:
 返回元素本身
-
--save:
-
+- save:
 向存储系统写入数据集
-
--persist:
-
+- persist:
 指定以后要复用的RDD，spark默认将要复用的RDD放在内存中
-
 Spark中RDD的内部接口：
--partitions()：
-
+- partitions()：
 返回一组Partition对象
-
--preferredLocations(p):
-
+- preferredLocations(p):
 根据数据存放的位置，返回分区p在哪些节点访问更快
-
--dependencies():
-
+- dependencies():
 返回一组依赖
-
--iterator(p, parentIters)：
-
+- iterator(p, parentIters)：
 按照父分区的迭代器，逐个计算分区p的元素
-
--partitioner():
+- partitioner():
 
 返回RDD是否被hash/range分区的元数据信息
 
