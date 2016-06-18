@@ -1,7 +1,14 @@
-现有模式存在的问题：
-现在的计算架构处理一些计算问题的时候效率比较低，iterative algorithm和interactive data mining，因为现有的算法不是in-memory computing的，所以对于很多reuse中间结果的算法来说，效率就非常低，而之前的解决方案则是向外部的storage输出计算的中间结果，这就因为replica，disk I/O等问题，效率大大降低了
-也有很多框架着手解决这一问题，而最大的障碍在于怎样对于in-memory computing做到fault-tolerant，而现有的方法是在节点之间做数据的备份或者是log的备份，效率就大大降低了
-解决的方案：提出了Resilient Distributed Dataset，可以在大规模的计算集群上面运行in-memory computing的算法，基于coarse-grained transformation。如果一个RDD的partition丢失了，就根据lineage重新计算一个partition出来。
+
+
+#ResilientDistributedDataset  Spark 
+
+
+##现有模式存在的问题：
+现在处理大数据的很多计算架构处理某些问题的时候效率比较低，尤其是对于需要迭代计算和交互计算的应用。因为现有的算法不是in-memory computing的，很多大数据的算法都需要重用中间结果，在中间结果的基础上进行计算，而处理这类问题的时候，之前的解决方只能是向外部的storage输出计算的中间结果，这就因为disk I/O的限制，性能非常的不理想
+也有很多框架着手解决这一问题，而最大的障碍在于怎样对于in-memory computing做到faultTolerant，而现有的方法是在节点之间做数据的备份或者是log的备份，效率就大大降低了
+
+##本文的解决的方案：
+提出了Resilient Distributed Dataset，以及基于RDD计算模型的Spark。可以在大规模的计算集群上面运行in-memory computing的算法，以及基于coarse-grained transformation。如果一个RDD的partition丢失了，就根据lineage重新计算一个partition出来。
 
 
 RDD: 
@@ -70,19 +77,19 @@ Pregel,Twister和HaLoop支持迭代的运算。然而这些框架只是对他们
 随机初始化一个url和它所对应的rank值组成的RDD ranks。
 构建一个contribs RDD，该RDD包含了url以及指向它的url对其rank值所做的贡献。在每一步的迭代中都用links和当前ranks的值更新contribs的值，然后再用计算得到的contribs的值更新ranks的值，然后进行下一次迭代。迭代多次后，ranks的值会收敛。每一步迭代都会更新ranks的值，因此为了减少错误恢复的时间，用户可以在迭代一定次数后将ranks的值写入到磁盘做备份，这样以来当ranks的分区丢失时，就不需要从头开始迭代计算了。此外，可以人为地将links RDD根据URL在结点之间进行分区，然后将ranks按照同样的方式进行分区，这样以来在join的时候就不需要跨结点进行通讯了。Spark将每个url当前的贡献值发送到它的link lists所在的机器结点上，在那些结点机器上计算对应的URL的新的rank值，然后再与其link lists做join，依此类推。迭代多次后ranks值会收敛。
 
-作业：
+##作业题：
 
 
-1.What are the advantages of spark compared to MapReduce?
+###1.What are the advantages of spark compared to MapReduce?
 1.Spark 在内存中处理数据，而 Hadoop MapReduce 是通过 map 和 reduce 操作在磁盘中处理数据，所以处理某一些应用Spark比Mapreduce效率要高。
 2. 使用Mapreduce的时候需要将原来的算法转化并且分解为Map和Reduce，相比之下增加了编程的难度，尤其是很多问题并不适合这样来解决。
 3.Spark支持多种多种语言以及很多现有的算法，能够很方便的进行整合以及快速地进行开发。
-2.Describe the pros and cons of lineage and checkpoint?
+###2.Describe the pros and cons of lineage and checkpoint?
 lineage的优点：一个RDD通过lineage记录它如何从其他RDD转化而来，如果一个RDD出错，就可以通过lineage的链进行还原。
 lineage的缺点：果有一个任务计算时间需要很长，而中间发生错误，如果使用lineage的方法的话需要从头开始进行计算，额外开销会比较大。
 Checkpoint优点：可以很容易地进行recover，与使用lineage进行恢复相比，而使用checkpoint就可以直接恢复到之前的某一个状态
 Checkpoint的缺点：占用额外的储存空间，如果没有及时做checkpoint的话会丢失数据。
-3.Describe which applications are RDD suitable for and not suitable for?
+###3.Describe which applications are RDD suitable for and not suitable for?
 1.RDD适合计算使对内存需要比较小的，需要进行迭代计算的应用。尤其适合应对批处理命令比较多的应用，在对同样的数据集进行相同的操作的情况下优势会比较的明显。
 2.RDD不适合对内存比较大的，需要不断从存储器读取数据的应用，尤其是那些需要异步地，细粒度地修改共享数据的应用，会显著地降低计算的效率。
 
