@@ -4,11 +4,10 @@
 
 
 ##现有模式存在的问题：
-现在处理大数据的很多计算架构处理某些问题的时候效率比较低，尤其是对于需要迭代计算和交互计算的应用。因为现有的算法不是in-memory computing的，很多大数据的算法都需要重用中间结果，在中间结果的基础上进行计算，而处理这类问题的时候，之前的解决方只能是向外部的storage输出计算的中间结果，这就因为disk I/O的限制，性能非常的不理想
-也有很多框架着手解决这一问题，而最大的障碍在于怎样对于in-memory computing做到faultTolerant，而现有的方法是在节点之间做数据的备份或者是log的备份，效率就大大降低了
+在Spark之前，很多大数据的计算架构效率比较低，尤其是对于需要迭代计算和交互计算的应用，因为之前的架构不是in-memory computing的，而很多大数据的算法都需要重用中间结果，在中间结果的基础上进行计算，所以处理这类问题的时候，之前的解决方只能是向外部的storage输出计算的中间结果，这就因为disk I/O的限制，导致性能的问题，虽然也有很多框架着手解决这一问题，但没法高效地解决诸如faultTolerance的问题
 
 ##本文的解决的方案：
-提出了Resilient Distributed Dataset，以及基于RDD计算模型的Spark。可以在大规模的计算集群上面运行in-memory computing的算法，以及基于coarse-grained transformation。如果一个RDD的partition丢失了，就根据lineage重新计算一个partition出来。
+提出了Resilient Distributed Dataset，以及基于RDD计算模型的Spark。可以在大规模的计算集群上面运行in-memory computing的算法，和基于coarse-grained transformation。
 
 
 ###RDD的概念: 
@@ -32,26 +31,39 @@ RDD是一个数据模型，可以把RDD理解成Spark当中的一种数据结构
 ###RDD（Spark）提供的接口:
 1. 定义及创建RDD的接口(transformation):
 
--map:对RDD中的每个元素都执行一个指定的函数来产生一个新的RDD
--reduce:将RDD中元素两两传递给输入函数，同时产生一个新的值，新产生的值与RDD中下一个元素再被传递给输入函数直到最后只有一个值为止
--filter:对之前的RDD进行筛选
--flatMap：与map类似，区别是经map处理后只能生成一个元素，而经flatmap处理后可生成多个元素来构建新RDD
+- map:
+对RDD中的每个元素都执行一个指定的函数来产生一个新的RDD
+- reduce:
+将RDD中元素两两传递给输入函数，同时产生一个新的值，新产生的值与RDD中下一个元素再被传递给输入函数直到最后只有一个值为止
+- filter:
+对之前的RDD进行筛选
+- flatMap：
+与map类似，区别是经map处理后只能生成一个元素，而经flatmap处理后可生成多个元素来构建新RDD
 
 
 2. 使用RDD的接口(action):
 
 这些操作给应用程序返回一个结果或者向存储系统中写入数据
-count:返回数据集中元素的个数
-collect:返回元素本身
-save:向存储系统写入数据集
-persist:指定以后要复用的RDD，spark默认将要复用的RDD放在内存中
+- count:
+返回数据集中元素的个数
+-collect:
+返回元素本身
+-save:
+向存储系统写入数据集
+-persist:
+指定以后要复用的RDD，spark默认将要复用的RDD放在内存中
 
 Spark中RDD的内部接口：
-partitions()：返回一组Partition对象
-preferredLocations(p):根据数据存放的位置，返回分区p在哪些节点访问更快
-dependencies():返回一组依赖
-iterator(p, parentIters)：按照父分区的迭代器，逐个计算分区p的元素
-partitioner():返回RDD是否被hash/range分区的元数据信息
+-partitions()：
+返回一组Partition对象
+-preferredLocations(p):
+根据数据存放的位置，返回分区p在哪些节点访问更快
+-dependencies():
+返回一组依赖
+-iterator(p, parentIters)：
+按照父分区的迭代器，逐个计算分区p的元素
+-partitioner():
+返回RDD是否被hash/range分区的元数据信息
 
 
 ###论文中代码的执行：
