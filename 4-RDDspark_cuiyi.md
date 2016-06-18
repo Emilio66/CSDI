@@ -85,21 +85,21 @@ partitioner():返回RDD是否被hash/range分区的元数据信息
 
 
 ###1.What are the advantages of spark compared to MapReduce?
-####1.Spark 在内存中处理数据，而 Hadoop MapReduce 是通过 map 和 reduce 操作在磁盘中处理数据，所以处理某一些应用Spark比Mapreduce效率要高。
-####2. 使用Mapreduce的时候需要将原来的算法转化并且分解为Map和Reduce，相比之下增加了编程的难度，尤其是很多问题并不适合这样来解决。
-####3.Spark支持多种多种语言以及很多现有的算法，能够很方便的进行整合以及快速地进行开发。
+1.Spark 在内存中处理数据，而 Hadoop MapReduce 是通过 map 和 reduce 操作在磁盘中处理数据，所以处理某一些应用Spark比Mapreduce效率要高。
+2.使用Mapreduce的时候需要将原来的算法转化并且分解为Map和Reduce，相比之下增加了编程的难度，尤其是很多问题并不适合这样来解决。
+3.Spark支持多种多种语言以及很多现有的算法，能够很方便的进行整合以及快速地进行开发。
 ###2.Describe the pros and cons of lineage and checkpoint?
-####lineage的优点：
+-lineage的优点：
 一个RDD通过lineage记录它如何从其他RDD转化而来，如果一个RDD出错，就可以通过lineage的链进行还原。
-####lineage的缺点：
-果有一个任务计算时间需要很长，而中间发生错误，如果使用lineage的方法的话需要从头开始进行计算，额外开销会比较大。
-####Checkpoint优点：
+-lineage的缺点：
+如果有一个任务计算时间需要很长，而中间发生错误，如果使用lineage的方法的话需要从头开始进行计算，额外开销会比较大。
+-Checkpoint优点：
 可以很容易地进行recover，与使用lineage进行恢复相比，而使用checkpoint就可以直接恢复到之前的某一个状态
-####Checkpoint的缺点：
+-Checkpoint的缺点：
 占用额外的储存空间，如果没有及时做checkpoint的话会丢失数据。
 ###3.Describe which applications are RDD suitable for and not suitable for?
-####1.RDD适合计算使对内存需要比较小的，需要进行迭代计算的应用。尤其适合应对批处理命令比较多的应用，在对同样的数据集进行相同的操作的情况下优势会比较的明显。
-####2.RDD不适合对内存比较大的，需要不断从存储器读取数据的应用，尤其是那些需要异步地，细粒度地修改共享数据的应用，会显著地降低计算的效率。
+1.RDD适合计算使对内存需要比较小的，需要进行迭代计算的应用。尤其适合应对批处理命令比较多的应用，在对同样的数据集进行相同的操作的情况下优势会比较的明显。
+2.RDD不适合对内存比较大的，需要不断从存储器读取数据的应用，尤其是那些需要异步地，细粒度地修改共享数据的应用，会显著地降低计算的效率。
 
 
 
