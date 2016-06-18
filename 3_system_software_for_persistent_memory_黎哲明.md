@@ -4,7 +4,9 @@
 PMFS利用PM的byte-addressability来避免传统面相块的存储方式的overhead，使得上层应用可以直接访问PM。
 
 ### **一. NVM特性**
-NVM是RAM而flash是ROM，NVM的读写速度比flash快，NVM是byte-addressable的而flash不是
+~~NVM是RAM而flash是ROM，~~<br>
+NVM即非易失性存储器,所有在掉电后仍能保持其内容的内存组件都可以称为NVM,fast, byte-addressable, non-volatile<br>
+NVM的读写速度比flash快，NVM是byte-addressable的而flash不是
 
 ### **二. consistency**
 ####保证一致性的三种方式：
