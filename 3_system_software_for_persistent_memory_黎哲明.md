@@ -37,3 +37,33 @@ atomic in-place updates:in order to minimize journaling overhead[8/16/64-bytes]
 1. Mmap: Mmap in PMFS maps file data directly into the application’s virtual address space,出于性能的考虑。
 2. 解决reorder问题：将log entry的大小设置成与一个cacheline相同(64bytes)，并且保证对同一个cacheline的写操作不会被reordered。
 3. write protection: a). 利用SMAP,Prohibit writes into user area; b). PMFS write windows: mount as read-only, when writing CR0.WP is set to zero 
+
+### **五. 课前习题**
+
+---
+> Why do memory reordering and cache play an important role in PMFS consistency? How does PMFS maintain consistency?
+
+因为在保证metadata一致性时采用的方式是journalling，在标明记录的log entry durable的时候作为标志的gen_id必须最后写，因此需要避免编译器的memory reordering，否则可能造成gen_id标明为valid时log entry却不是的错误情况。cache保证了对同一个cacheline的写操作的顺序不被重排。
+
+PMFS采用保证一致性的方式是对metadata使用logging，而对data使用Cow。
+ 
+---
+
+> There are three techniques to support consistency: copy-on-write, journaling and log-structured updates. Please explain the differences among them. Which technique does PMFS choose?
+
+1. cow: 先复制一个数据副本,在副本上进行修改,最后将指针指向新数据
+2. journaling: 通过写日志记录操作,根据日志进行恢复
+3. log-structrued updates: 以日志的形式组织文件系统并执行更新
+<br/>
+cow即使在做很小的更新的情况下可能也需要先复制一个很大的数据副本造成额外的overhead；journaling需要执行两次写操作，一次写日志，一次写文件；log-structrued fs在log的末尾追加数据(顺序写)，写操作高效但随机读的效率低。
+<br>
+PMFS采用的方式是对小的metadata的更新采用atomic in-place and fin-grained logging, 而对于文件数据的更新则采用CoW。
+
+---
+> What granularity does PMFS use for log? Please explain the reason.
+
+PMFS中log entry的大小和采用和一个cacheline一样的64 byte
+
+因为利用两次pm_wbarrier或者checksum的方式来保证PMFS－Log有效的方式代价太大，作者将log entry的大小设置成与一个cacheline相同，并且利用cacheline中保证写顺序不被reorder的特性来保证log的validate。
+
+---
