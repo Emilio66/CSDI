@@ -120,7 +120,9 @@ GAS steps:
 
 往年题目：Assume there are 3 machines of one cluster, and the partition functions are showed below. Please draw the edge-cut partition as in Graphlab and vertex-cut partition as in Powergraph respectively for the sample graph given below. (In your answer, you should differentiate the master from mirrors (or ghosts), and master is defined based on “getPartitionV” function.)
 ![alt text](/img/7-3-3.jpg "wangnian")
+
 点划分（红点表示master）
 ![alt text](/img/7-3-4.png "vetex")
+
 边划分
 ![alt text](/img/7-3-5.png "edge")
