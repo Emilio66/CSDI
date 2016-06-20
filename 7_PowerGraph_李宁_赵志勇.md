@@ -19,6 +19,7 @@
 *   computation（之前的计算模式是多个节点之间可以并行，单个节点内无法并行，对于高度数节点来说可扩展性不强）
    
 图并行化抽象流行的两种方式：
+
  -- 使用消息 Pregel
 
   Pregel向单个worker发送大量消息给邻居节点，成本较高。同步执行但容易产生straggler，straggler可以理解为执行比较慢的节点。
@@ -32,7 +33,7 @@ GraphLab和Pregel是不适合处理natural graphs
 主要的两大挑战是高度数的点和低质量的分区策略。
 
 PowerGraph的贡献：
-* 第一，提出"think like a vertex"思想，分解单个节点的vertex-program，使节点内程序并行化，整个并行计算过程用GAS模型来描述
+* 第一，采用"think like a vertex"思想，分解单个节点的vertex-program，使节点内程序并行化，整个并行计算过程用GAS模型来描述
 * 第二，采用点切分（vertex-cut）策略，将高度数节点分配到多台机器上，来保证整个集群的均衡性，该策略对大量密率图分区是非常高效
 
 #### GAS模型 
