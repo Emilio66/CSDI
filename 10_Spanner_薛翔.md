@@ -18,8 +18,9 @@
 ### **1. Overview**
 #### 现状
 
-    不适用于BigTable的应用：“complex, evolving schemas”，或要求所有副本保持强一致性。
-    Megastore：poor write throughput
+不适用于BigTable的应用：“complex, evolving schemas”，或要求所有副本保持强一致性。
+
+Megastore：poor write throughput
 
 #### 区别于BigTable
 
@@ -114,7 +115,7 @@ TT.after(t), TT.before(t)：检查时间t是否已经成为“过去”或仍处
 9. 释放锁。
 
 
-*说明：第六步中，实际上，就是想拿到一个timestamp **s**作为当前txn的commit timestamp以全局应用。这个**s**要保证后于所有在**s**之前开始（同时commit timestamp也在**s**之前的）txn都全局应用成功。所以第七步等待花的时间就是用来确保这些txn都全局应用完毕。
+说明：第六步中，实际上，就是想拿到一个timestamp **s**作为当前txn的commit timestamp以全局应用。这个**s**要保证后于所有在**s**之前开始（同时commit timestamp也在**s**之前的）txn都全局应用成功。所以第七步等待花的时间就是用来确保这些txn都全局应用完毕。
 
 #### 4.2 Read-Only Txns
 
@@ -125,7 +126,7 @@ TT.after(t), TT.before(t)：检查时间t是否已经成为“过去”或仍处
 2. 如果scope跨多个Paxos groups：读取TT.now().latest作为当前RO txn的timestamp并执行
 
 
-*以上两种处理都能保证这次读在所有已全局生效的写之后
+说明：以上两种处理都能保证这次读在所有已全局生效的写之后
 
 #### 4.3 Schema-Change Txns
 
@@ -138,7 +139,9 @@ TT.after(t), TT.before(t)：检查时间t是否已经成为“过去”或仍处
 
     Definition: if a transaction T1 commits before another transaction T2 starts, then T1’s commit timestamp is smaller than T2’s.
 
-    [TODO]
+    E.C.强调的是，每个txn在系统中生效的时间点和他们的commit timestamp保持一致，即对于commit timestamp t1<t2，则所有相关server看到的生效顺序也会是先T1后T2；
+
+    而Serialization强调的是，txn之间**要有**执行的先后顺序（至于什么顺序则没做规定）。相对E.C.可能会存在生效时间和提交时间不一致，即reorder的情况（限制松一点）。
 
 
 
