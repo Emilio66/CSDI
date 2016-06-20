@@ -22,7 +22,7 @@ hljs.initHighlightingOnLoad();
 * 细粒度的锁虽然性能高，但是实现难度大，例如双端队列的并行版本使用细粒度的锁难以实现
 * 存在优先级反转（priority inversion）、护航（conveying）、死锁（dead lock）等问题
     * _优先级反转_ 一个高优先级任务间接被一个低优先级任务所抢先(preemtped)，使得两个任务的相对优先级被倒置
-    * _护航_ 多线程程序中相同优先级任务反复竞争同一个锁。
+    * _护航_ 多线程程序中相同优先级任务反复竞争同一个锁。当一个持有锁的进程被解调度了，可能是因为调度时间到了，发生了一个页错误，或者是其他一些终端。当有类似终端发生时，其他本该可以运行的进程却无法运行。
     * _死锁_ 两个或以上任务在执行过程中，由于竞争资源造成阻塞    
 * 可组合型差。例如从一个链表移动一个元素到另一个链表时，必须使用低性能的粗粒度的锁来避免可能发生的死锁 
 
@@ -67,7 +67,7 @@ Xabort
 
 Load-transactional LT //从共享内存出读取值到私有寄存器
 
-Load-transactional exclusive LTX // 从共享内存出读取值到私有寄存器并标记 *即将更新*
+Load-transactional exclusive LTX // 从共享内存出读取值到私有寄存器并标记 即将更新
 
 Store-transactional ST //将私有寄存器中的值写入共享内存中（write set），尚不对外可见
 
@@ -80,7 +80,7 @@ Store-transactional ST //将私有寄存器中的值写入共享内存中（writ
 * 修改状态的基本指令
 
 ```
-Commit(COMMIT) //尝试使事务所做的修改持久化,其他事务不再更新本事务的data set，没有别的事务*读取过*本事务的write set，即commit成功，并使该事务对于write set所做的修改对别的事务可见。
+Commit(COMMIT) //尝试使事务所做的修改持久化,其他事务不再更新本事务的data set，没有别的事务读取过本事务的write set，即commit成功，并使该事务对于write set所做的修改对别的事务可见。
 
 Abort(ABORT)   // 取消所有对于write set的临时修改。
 
@@ -142,6 +142,8 @@ __以共享总线结构的协议为例:__
 |XCOMMIT|discard on commit|
 |XABORT|discard on abort|
 
+![img](/img/8_2.jpg)
+
 事务性操作缓存有两个标志位，分别为`XCOMMIT`，`XABORT`。当事务提交时，会将`XCOMMIT`标记为`EMPTY`，将`XABORT`标记为`NORMAL`；当事务废弃时，会将`XABORT`标记为`EMPTY`，`XCOMMIT`标记为`NORMAL`
 当事务性缓存需要空间时，首先搜索被标记为`EMPTY`的位置，之后再搜索被标记为`NORMAL`的位置，最后才是`XCOMMIT`的位置，由此来确定优先级，并且避免访问竞争资源提升性能。
 
@@ -158,7 +160,7 @@ __以共享总线结构的协议为例:__
 | T_RFO | trans      |    read value |    exclusive    |
 | BUSY | trans      |    refuse access |    unchanged    |
 
-以上的cycle中前三个是`Goodman`大大协议总已经定义过了的，本文扩展了三个周期，`T_READ`、`T_RFO`和`BUSY`，前两个就是对原有周期的简单扩展，`BUSY`周期是为了防止各个transation之间过于频繁的互相abort而设立的，当食物接收到BUSY回应后，会立即abort并retry，理论上防止了资源饥饿。
+以上的cycle中前三个是`Goodman`大大协议总已经定义过了的，本文扩展了三个周期，`T_READ`、`T_RFO`和`BUSY`，前两个就是对原有周期的简单扩展，`BUSY`周期是为了防止各个transation之间过于频繁的互相abort而设立的，当事务接收到BUSY回应后，会立即abort并retry，理论上防止了资源饥饿。
 
 #### 处理器
 每个处理器持有两个状态标识位：
@@ -201,7 +203,8 @@ TSTATUS(transaction status)//事务是否是active还是aborted
 > What is orphan transaction? Why do we need VALIDATE instruction?
 > 什么是孤儿事务？为什么我们需要VALIDATE指令？
 
-__孤儿事务__ 是指在被废弃（aborted）之后继续执行的事务（例如，在另一个已经提交过的事务更新了自己的read set之后）
+__孤儿事务__ 是指在被废弃（aborted）之后继续执行的事务（例如，在另一个已经提交过的事务更新了自己的read set之后）**update:** 孤儿事务是指本身事务在执行时产生了错误（而非读写数据被其他事务提前修改）导致的abort，以至于这个事务会一个retry占据资源无法commit/rollback.
+
 事务在执行过程中利用`VALIDATE`指令来确保自己所读取的值是正确的，防止读取过期的数据，即保证了数据的一致性。
 
 ---
