@@ -33,7 +33,7 @@ GraphLab和Pregel是不适合处理natural graphs
 主要的两大挑战是高度数的点和低质量的分区策略。
 
 PowerGraph的贡献：
-* 第一，采用"think like a vertex"思想，分解单个节点的vertex-program，使节点内程序并行化，整个并行计算过程用GAS模型来描述
+* 第一，采用"think like a vertex"思想，提出GAS模型分解单个节点的vertex-program，使节点内程序并行化，对高度数节点非常有利
 * 第二，采用点切分（vertex-cut）策略，将高度数节点分配到多台机器上，来保证整个集群的均衡性，该策略对大量密率图分区是非常高效
 
 #### GAS模型 
