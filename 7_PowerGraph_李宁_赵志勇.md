@@ -11,25 +11,29 @@
 
 
 ####问题： 
-自然图highly skewed，有power-law degree distribution现象（少数节点拥有极大多数边，大多数节点只有少量边），此外目前的按边划分的质量差导致
-*   work imbalance(gather、scatter与degree数量成正比), 
-*   partition(直接hash，随机划分，poor locality，高度数节点与低度数节点被同样地划分，不合理)，
+自然图highly skewed，有power-law degree distribution现象（少数节点拥有极大多数边，大多数节点只有少量边），目前的按边划分(edge-cut)的质量差,使得对自然图的计算存在以下挑战：
+*   work imbalance(gather、scatter的工作量与degree数量成正比), 
+*   partition(目前直接hash，随机划分节点，poor locality，高度数节点与低度数节点被同样地划分，不合理)，
 *   通信开销不平衡（度数高的节点所在机器需要较多的通信）；
 *   存储不均衡，一个节点的所有邻边信息可能超过机器容量；
 *   computation（之前的计算模式是多个节点之间可以并行，单个节点内无法并行，对于高度数节点来说可扩展性不强）
    
 图并行化抽象流行的两种方式：
---使用消息 Pregel
---共享状态 GraphLab
-Pregel向单个worker发送大量消息给邻居节点，成本较高。同步执行但容易产生straggler，straggler可以理解为执行比较慢的节点。
-GraphLab共享状态时异步执行，需要大量锁。会触到图的大部分，并且对于单台机器边的元数据太大
+ -- 使用消息 Pregel
+
+  Pregel向单个worker发送大量消息给邻居节点，成本较高。同步执行但容易产生straggler，straggler可以理解为执行比较慢的节点。
+
+-- 共享状态 GraphLab
+
+  GraphLab共享状态时异步执行，需要大量锁。会触到图的大部分，并且对于单台机器边的元数据太大
+  
 -->
-GraphLab和Pregel是不适合处理这种natural graphs 
+GraphLab和Pregel是不适合处理natural graphs 
 主要的两大挑战是高度数的点和低质量的分区策略。
 
-PowerGraph的特点
-第一，提出了GAS计算模型，将高度数的点进行并行化
-第二是采用点切分策略，来保证整个集群的均衡性，该策略对大量密率图分区是非常高效的。
+PowerGraph的贡献：
+* 第一，提出"think like a vertex"思想，分解单个节点的vertex-program，使节点内程序并行化，整个并行计算过程用GAS模型来描述
+* 第二，采用点切分（vertex-cut）策略，将高度数节点分配到多台机器上，来保证整个集群的均衡性，该策略对大量密率图分区是非常高效
 
 #### GAS模型 
 这是paper提出的一种图计算程序的三个概念上的阶段：
@@ -42,6 +46,8 @@ PowerGraph的特点
 *   edge-cut 通常通过对每个节点编号进行hash，把节点平均分配到各台机器，有很多边被切分开，所以在对应机器上会重新构建这些边，对于边的数量较少的节点采用这种方式并没有什么坏处，但对于度数很高的节点，重构边的工作量就会很大，造成负载不均衡
 
  例子：pregel（synchronous bulk message passing）  graphLab asynchronous shared memory
+ 
+ 
 *   vertex-cut 将节点切分成多个mirror节点，每个mirror节点负责处理一部分的边，这样边就被平均分配到各台机器上，度数高的节点的边被平均分布在多台机器上，每台机器的负载相对均衡  
 
  例子：powergraph （balanced p-way vertex-cut)
@@ -67,7 +73,7 @@ Oblivious的贪婪分区策略：折中
 1.1. How skewed degree distribution challenges the original graph parallel computation? Give a brief summary of the computation procedure and then analysis the challenges.
 自然图highly skewed，有power-law degree distribution现象（少数节点拥有极大多数边，大多数节点只有少量边），此外目前的按边划分的质量差导致
   * work imbalance(gather、scatter与degree数量成正比), 
-  * partition(直接hash，随机划分，poor locality，高度数节点与低度数节点被同样地划分，不合理)，
+  * partition(目前直接hash，随机划分节点，poor locality，高度数节点与低度数节点被同样地划分，不合理)，
   * 通信开销不平衡（度数高的节点所在机器需要较多的通信）；
   * 存储不均衡，一个节点的所有邻边信息可能超过机器容量；
   * computation（之前的计算模式是多个节点之间可以并行，单个节点内无法并行，对于高度数节点来说可扩展性不强）
