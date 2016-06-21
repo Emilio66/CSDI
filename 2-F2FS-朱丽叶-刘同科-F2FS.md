@@ -59,3 +59,15 @@ Adaptive logging中的normal logging(append only logging),能将随机写变成�
 #What is the design rationale of multi-head logging? How does F2FS separate cold/hot data?
 
 F2FS维护六个主要日志区域来进行冷热数据的分离，冷热数据有三个温度(hot/warm/cold)，目录项的node和data都是hot，文件直接节点和用户数据是warm，间接节点和cleanning清掉的数据/用户标记的冷数据/多媒体文件都是cold。通过预期的更新频率进行冷热数据的分离。
+
+##roll-forward的问题，说一下自己的理解。
+首先roll-forward recovery是为了解决经常写一些小数据，引发fsync操作，然后支持fsync操作的一个比较差的方法是做cp，然后回滚。因为cp会产生把所有节点和无关项之类的都写一遍。造成性能问题。
+但是做cp和回滚肯定是要做的，为了改进性能，对一些小的写操作，F2FS在他们直接的节点块里面设立一个特殊的flag。这样就可以找到这个写操作。
+在实际recovery操作中，F2FS收集在上一个有效cp后的对某个文件的写操作，可能是cp后的n个操作，记为N+n，N就是做cp的点。
+然后找到在做这个cp之前的对这个文件的写操作，因为这个写操作做了cp，所以是一个稳定的写入磁盘的点。记为N-n。
+比较cp前和cp后，N+n和N-n的不同，如果不同，使用N+n，刷新了N-n在cp的稳定存储，就可以跳过cp后一系列的操作，直接进行small write的更新，从而进行优化。
+概括一下。。。。。。。。。。。。。。。。。。分割线
+就是N+n是做了cp后这个数据更新的点，因为有特殊的flag，所以我们可以找到它，记为N+n。然后recovery的时候，使用cp，cp有个稳定的记录，能得到这个数据在cp之前的稳定的状态，记为N-n，进行对比，不同就使用最新的那个。
+
+我个人的理解，有问题欢迎拍砖。最近很多人问这个问题，不过这个应该不是重点。。。
+
