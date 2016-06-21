@@ -82,9 +82,9 @@ dir是数据放置的单元，其下所有数据有一致的备份设置
 ### **3. TrueTime**
 #### API
 
-TT.now()：返回一个时间段[earliest, latest]，保证被调用的一刻的实际时间处在这个范围内；
+TT.now()：返回一个时间段[earliest, latest]，保证被调用的一刻，所有spanserver的本地时间都处在这个范围内；
 
-TT.after(t), TT.before(t)：检查时间t是否已经成为“过去”或仍处在“未来”，即是否小于earliest或大于latest。
+TT.after(t), TT.before(t)：检查是否所有spanserver都经历了t；或都还没有经历t。
 
 
 #### TrueTime实现方式
