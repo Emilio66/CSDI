@@ -8,11 +8,11 @@
 ## SQL -> noSQL -> newSQL 
 - [为什么](http://dataconomy.com/sql-vs-nosql-vs-newsql-finding-the-right-solution/)
 
-    SQL：使用广泛，保证ACID；扩展性差，过于通用，调试复杂;
+    SQL：使用广泛，标准统一，技术支持丰富，保证ACID；扩展性差，过于通用以至性能提升受限，调试复杂;
 
-    noSQL：最终一致性，扩展性好，动态调整schema；代价是ACID的弱化;
+    noSQL：最终一致性使得availability很好，扩展性好，半结构化数据的设计适于动态调整schema；代价是ACID的弱化;
 
-    newSQL：强一致性，事务支持，SQL语义和工具，性能好；通用性还是没SQL好
+    newSQL：更容易实现强一致性，事务支持，支持SQL语义和工具，使用NoSQL风格的集群架构而提供传统的数据和查询模型；通用性还是没SQL好，并不支持所有传统SQL工具。
 
 ## Spanner
 ### **1. Overview**
@@ -89,13 +89,17 @@ TT.after(t), TT.before(t)：检查时间t是否已经成为“过去”或仍处
 
 #### TrueTime实现方式
     
-使用GPS和原子钟来保证TT.now()准确性
+硬件设备：GPS和原子钟。
+
+每个datacenter中有一些time master机器，每个都运行timeslave后台；大多数使用GPS其他用原子钟。特点如下：
 
 - GPS互相同步但易受干扰；
 - 原子钟相对稳定但一段时间不同步会导致TT.now()时间段变大（原子钟的频率会有微小差异）。
 
 
 ### **4. Concurrency Control**
+
+Clients通过location proxy来定位spanserver，将请求交由该spanserver处理。
 
 #### 主要的txn类别
 - read-write txn: 普通的读写txn；
@@ -104,26 +108,26 @@ TT.after(t), TT.before(t)：检查时间t是否已经成为“过去”或仍处
 
 #### 4.1 ﻿Read-Write Txns
 
-1. （**client执行部分**）拿锁；
-2. 执行read&write；
-3. 开始2PC，选择coordinator group，将修改发送给coordinator leader；
+1. （**spanserver执行部分**）对要读的数据，向对应的group leader拿读锁（wound-wait）；
+2. 执行local read&write；
+3. 开始2PC，选择coordinator group，将修改发送给coordinator leader和non-coordinator-participant leader；
 4. （**每个non-coordinator-participant leader执行部分**）选择大于本地最新成功的txn commit timestamp作为"prepare timestamp"返回给coordinator leader；
 5. （**coordinator leader执行部分**）获得每个leader相应的写锁；
-6. 等待所有participant leader的"*prepare timestamps*"，选择不小于所有prepare timestamps的"**s**"作为commit timestamp，此**s**还应大于TT.now().latest和本地最近txn的commit timestamp；
+6. 等待所有participant leader的"*prepare timestamps*"，选择不小于所有prepare timestamps的"**s**"作为commit timestamp，此**s**还应不小于本地获取的TT.now().latest和本地最近txn的commit timestamp；
 7. 等待s < TT.now().earliest，即TT.after(s)，确保所有在s之前的txn都全局生效；
 8. 以s为commit timestamp提交当前txn，并反馈client；
 9. 释放锁。
 
 
-说明：第六步中，实际上，就是想拿到一个timestamp **s**作为当前txn的commit timestamp以全局应用。这个**s**要保证后于所有在**s**之前开始（同时commit timestamp也在**s**之前的）txn都全局应用成功。所以第七步等待花的时间就是用来确保这些txn都全局应用完毕。
+说明：第六步中，实际上，就是想拿到一个timestamp **s**作为当前txn的commit timestamp。由于txn的顺序是遵循他们的commit timestamp，这个**s**就要保证大于之前所有txn commit timestamp。所以第七步等待花的时间就是用来确保所有机器的时间都“经历”了这些“之前的”txn的commit timestamp时间点，这些“之前的”txn此刻确定全局可见。
 
 #### 4.2 Read-Only Txns
 
 首先，提取所有会被读到的key作为scope，然后分类讨论：
 
 
-1. 如果scope都落在一个Paxos group：将这个RO txn发送给group leader；leader调用LastTS()获取最近的write timestamp作为RO txn的timestamp并执行
-2. 如果scope跨多个Paxos groups：读取TT.now().latest作为当前RO txn的timestamp并执行
+1. 如果scope都落在一个Paxos group：将这个RO txn发送给group leader；leader调用LastTS()获取本spanserver最近一次的write commit timestamp作为RO txn的timestamp并执行；
+2. 如果scope跨多个Paxos groups：读取TT.now().latest作为当前RO txn的timestamp并执行。
 
 
 说明：以上两种处理都能保证这次读在所有已全局生效的写之后
@@ -141,7 +145,7 @@ TT.after(t), TT.before(t)：检查时间t是否已经成为“过去”或仍处
 
     E.C.强调的是，每个txn在系统中生效的时间点和他们的commit timestamp保持一致，即对于commit timestamp t1<t2，则所有相关server看到的生效顺序也会是先T1后T2；
 
-    而Serialization强调的是，txn之间**要有**执行的先后顺序（至于什么顺序则没做规定）。相对E.C.可能会存在生效时间和提交时间不一致，即reorder的情况（限制松一点）。
+    而Serialization强调的是，txn之间**要有**执行的先后顺序（至于什么顺序则没做规定）。相对E.C.，可能会存在生效时间和提交时间不一致，即reorder的情况（限制松一点）。
 
 
 
