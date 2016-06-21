@@ -26,17 +26,13 @@ logging让随机写变顺序写，在内存利用率较高的时候，进行thre
 
 #checkpoint怎么做
 
-1. flush所有的脏节点和目录项在page cache
+1. flush所有在page cache中的脏节点和目录项
 
-2. 它将挂起写活动，包括系统调用如create,unlinkandmkdir;
+2. 挂起写活动，包括系统调用如create,unlinkandmkdir;
 
 3. 文件系统的元数据，NAT，SIT和SSA被写入磁盘中特定区域
 
-4. 写一个包括以下信息的checkpoint pack到CP区域(Header and
-
-footer/NAT and SIT bitmaps/NAT and SIT journals/Summary blocks of active
-
-segments/Orphan blocks)
+4. 写一个包括以下信息的checkpoint pack到CP区域(Header and footer/NAT and SIT bitmaps/NAT and SIT journals/Summary blocks of active segments/Orphan blocks)
 
 #Wandering tree问题
 
