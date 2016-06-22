@@ -145,7 +145,7 @@ Clients通过location proxy来定位spanserver，将请求交由该spanserver处
 
     E.C.强调的是，每个txn在系统中生效的时间点和他们的commit timestamp保持一致，即对于commit timestamp t1<t2，则所有相关server看到的生效顺序也会是先T1后T2；
 
-    而Serialization强调的是，txn之间**要有**执行的先后顺序（至于什么顺序则没做规定）。相对E.C.，可能会存在生效时间和每个txn设定的commit timestamp不一致（限制松一点）。
+    而Serialization强调的是，txn之间**要有**执行的先后顺序，但不能保证在分布式里所有server上看到的顺序都是一致的（可能会在某server上看到的生效顺序和每个txn设定的全局顺序不一致。限制松一点）。
 
     【有不同意见可附在这下面，标出姓名及参考即可】
 
