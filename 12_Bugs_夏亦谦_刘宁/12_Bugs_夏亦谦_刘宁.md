@@ -7,7 +7,7 @@
 4. 如何检测Unstable code？
 
 ##概要
-Undefined behavior 是由于编程语言规范对某段代码可能产生的某些未定义的执行结果。  
+Undefined behavior 是编程语言规范对某段代码可能产生的某些执行结果未定义。   
 Unstable code就是在程序实际的执行过程中，由于涉及到undefined behavior，从而无法被编译器翻译（直接略过）的代码段。  
 
 类似于这种undefined behavior在C编译器中还有很多：
