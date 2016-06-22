@@ -38,7 +38,10 @@ STACK会在Assumption Δ被允许和不允许的情况下分别模拟编译。
 * Step2 - 模拟假设成立的情况进行一次编译；  
 * Step3 - 查看前两步的执行结果有没有区别，有区别的地方就是unstable code。
 
-###举个栗子
+###举个栗子   
+INT_MIN在标准头文件limits.h中的定义如下：  
+`#define INT_MIN (-INT_MAX - 1)`
+
 ![alt text](/12_Bugs_夏亦谦_刘宁/example2.png)  
 在这个代码段中，当((y==0) or (x == -1 and y == INT_MIN))时，x/y可能出现溢出。  
 因此，Assumption Δ：(y != 0) 且 (x != -1 and y != INT_MIN)
