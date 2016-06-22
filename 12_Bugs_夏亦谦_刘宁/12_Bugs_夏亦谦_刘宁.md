@@ -7,8 +7,8 @@
 4. 如何检测Unstable code？
 
 ##概要
-Undefined behaviour: 是一些程序错误，如空指针解引用，缓冲区溢出、use after free等。  
-Unstable code: 由于被定义为是undefined behavior，从而被编译器略过的代码。
+Undefined behavior 是由于编程语言规范对某段代码可能产生的某些未定义的执行结果。  
+Unstable code就是在程序实际的执行过程中，由于涉及到undefined behavior，从而无法被编译器翻译（直接略过）的代码段。  
 
 类似于这种undefined behavior在C编译器中还有很多：
 * Pointer overflow:   if ( p + 100 < p)
@@ -40,8 +40,8 @@ STACK会在Assumption Δ被允许和不允许的情况下分别模拟编译。
 
 ###举个栗子
 ![alt text](/12_Bugs_夏亦谦_刘宁/example2.png)  
-在这个代码段中，当((y==0) or (x == -1 or y == INT_MIN))时，x/y可能出现溢出。  
-因此，Assumption Δ：(y != 0) 且 (y != -1 or x != INT_MIN)
+在这个代码段中，当((y==0) or (x == -1 and y == INT_MIN))时，x/y可能出现溢出。  
+因此，Assumption Δ：(y != 0) 且 (x != -1 and y != INT_MIN)
 
 根据 Δ = ∀e:Reach(e) → ¬Undef(e)，可以对以上的三行代码列出公式如下，最终得到Δ的具体表达式。
 ![alt text](/12_Bugs_夏亦谦_刘宁/example3.png)  
@@ -57,11 +57,12 @@ STACK会在Assumption Δ被允许和不允许的情况下分别模拟编译。
 ###如何避免Unstable Code
 * 对于程序员来说，通过fix bug或者去掉一些会被编译器当做是undefined behavior的代码；
 * 对于编译器来说，可以集成一些现有的bug-finding的工具，或者利用STACK的方式来判定unstable code。
+* 完善编程语言的specification，定义更多的代码执行规则，减少undefined behavior的产生
 
 ###STACK为了更好的扩展性，做了什么权衡？
 1. STACK为了使可扩展性更高，在计算Δ = ∀e:Reach(e) → ¬Undef(e)的时候做了一些近似运算，使最后得到的结果可能会漏掉一些unstable code。  
 2. STACK为了简化和滤过某些查询用到的constraint solver如果发生了timeout，也会出现漏报的情况。  
-因此，STACK为了更好地扩展性，牺牲了一定的可靠性（精度）。
+因此，STACK为了更好的扩展性，牺牲了一定的可靠性（精度）。
 
 
 
