@@ -104,17 +104,17 @@ Clients通过location proxy来定位spanserver，将请求交由该spanserver处
 #### 主要的txn类别
 - read-write txn: 普通的读写txn；
 - read-only txn: 确定只读的txn。不拿锁，不block接下来的read-write txn，选择足够up-to-date的replica执行都行；
-- snapshot reads: 读历史数据的txn。不拿锁，选择足够up-to-date的replica执行都行（简单，没讲）。
+- snapshot reads: 读历史数据（或者说，数据在某个时间的版本）的txn。不拿锁，选择足够up-to-date的replica执行都行（简单，没讲）。
 
 #### 4.1 ﻿Read-Write Txns
 
-1. （**spanserver执行部分**）对要读的数据，向对应的group leader拿读锁（wound-wait）；
-2. 执行local read&write；
-3. 开始2PC，选择coordinator group，将修改发送给coordinator leader和non-coordinator-participant leader；
-4. （**每个non-coordinator-participant leader执行部分**）选择大于本地最新成功的txn commit timestamp作为"prepare timestamp"返回给coordinator leader；
+1. （**spanserver执行部分**）对要读的数据，向对应的group leader拿读锁（如果拿不到就放弃，重新拿，即wound-wait）；
+2. 执行本地读写（外部不可见）；
+3. 修改完成，开始2PC。选择coordinator group，将修改发送给coordinator leader和non-coordinator-participant leader；
+4. （**每个non-coordinator-participant leader执行部分**）收到txn修改内容后，选择本地最新成功的txn commit timestamp作为"prepare timestamp"返回给coordinator leader；
 5. （**coordinator leader执行部分**）获得每个leader相应的写锁；
-6. 等待所有participant leader的"*prepare timestamps*"，选择不小于所有prepare timestamps的"**s**"作为commit timestamp，此**s**还应不小于本地获取的TT.now().latest和本地最近txn的commit timestamp；
-7. 等待s < TT.now().earliest，即TT.after(s)，确保所有在s之前的txn都全局生效；
+6. 等待所有participant leader的"*prepare timestamps*"，选择最大的"**s**"。再将**s**与TT.now().latest和本地最新成果的txn commit timestamp比较，取最大的作为commit timestamp，赋值给"**s**"；
+7. 持续调用TrueTime获取interval，等待s < TT.now().earliest，即TT.after(s)，确保所有在s之前的txn都全局生效；
 8. 以s为commit timestamp提交当前txn，并反馈client；
 9. 释放锁。
 
@@ -145,7 +145,9 @@ Clients通过location proxy来定位spanserver，将请求交由该spanserver处
 
     E.C.强调的是，每个txn在系统中生效的时间点和他们的commit timestamp保持一致，即对于commit timestamp t1<t2，则所有相关server看到的生效顺序也会是先T1后T2；
 
-    而Serialization强调的是，txn之间**要有**执行的先后顺序（至于什么顺序则没做规定）。相对E.C.，可能会存在生效时间和提交时间不一致，即reorder的情况（限制松一点）。
+    而Serialization强调的是，txn之间**要有**执行的先后顺序（至于什么顺序则没做规定）。相对E.C.，可能会存在生效时间和每个txn设定的commit timestamp不一致（限制松一点）。
+
+    【有不同意见可附在这下面，标出姓名及参考即可】
 
 
 
