@@ -38,12 +38,12 @@ atomic in-place updates:in order to minimize journaling overhead[8/16/64-bytes]
 2. 解决reorder问题：将log entry的大小设置成与一个cacheline相同(64bytes)，并且保证对同一个cacheline的写操作不会被reordered。
 3. write protection: a). 利用SMAP,Prohibit writes into user area; b). PMFS write windows: mount as read-only, when writing CR0.WP is set to zero 
 
-### **五. 课前习题**
+### **五. 课前习题（个人理解，仅供参考）**
 
 ---
 > Why do memory reordering and cache play an important role in PMFS consistency? How does PMFS maintain consistency?
 
-因为在保证metadata一致性时采用的方式是journalling，在标明记录的log entry durable的时候作为标志的gen_id必须最后写，因此需要避免编译器的memory reordering，否则可能造成gen_id标明为valid时log entry却不是的错误情况。cache保证了对同一个cacheline的写操作的顺序不被重排。
+因为在PMFS中采用clflush将cpu cache中的内容写回，但为了提高性能不保证clflush的顺序，可能被reorder。而系统的recovery是依赖于写的顺序的，因此需要采用memory reordering也就是sfence这条指令来保证。cache重要是因为PMFS保证consistency的log都是先记录在cache中然后才将其持久化的。
 
 PMFS采用保证一致性的方式是对metadata使用logging，而对data使用Cow。
  
