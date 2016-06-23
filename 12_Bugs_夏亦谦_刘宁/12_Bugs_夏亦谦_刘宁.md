@@ -7,8 +7,8 @@
 4. 如何检测Unstable code？
 
 ##概要
-Undefined behavior 是编程语言规范对某段代码可能产生的某些执行结果未定义。   
-Unstable code就是在程序实际的执行过程中，由于涉及到undefined behavior，从而无法被编译器翻译（直接略过）的代码段。  
+`Undefined behavior` 是编程语言规范对某段代码可能产生的某些执行结果未定义。   
+`Unstable code` 就是在程序实际的执行过程中，由于涉及到undefined behavior，从而无法被编译器翻译（直接略过）的代码段。  
 
 类似于这种undefined behavior在C编译器中还有很多：
 * Pointer overflow:   if ( p + 100 < p)
@@ -22,7 +22,7 @@ Unstable code就是在程序实际的执行过程中，由于涉及到undefined 
 上面的代码中，buf + off < buf 就是一个undefined behavior：当off非常大的时候，会导致溢出，但gcc会认为(buf + off)总是小于buf_end的。所以当溢出的时候，gcc检测不到，会绕过这一段溢出检测代码，然后去读取buf段以外的内存。
 
 本文对12种C/C++编译器做了测试，发现：  
-1. 有一些编译器会悄悄地把unstable code给移除掉；  
+1. 有一些编译器会在加优化选项时删掉unstable code；  
 2. 不同的编译器会有不同的编译规则，不同版本的编译器对同一段代码会有不同的处理方式。  
 因此，需要一个成体系的approach来解决以上问题。
 
@@ -43,24 +43,25 @@ INT_MIN在标准头文件limits.h中的定义如下：
 `#define INT_MIN (-INT_MAX - 1)`
 
 ![alt text](/12_Bugs_夏亦谦_刘宁/example2.png)  
-在这个代码段中，当((y==0) or (x == -1 and y == INT_MIN))时，x/y可能出现溢出。  
-因此，Assumption Δ：(y != 0) 且 (x != -1 and y != INT_MIN)
+在这个代码段中，当((y==0) or (y == -1 and x == INT_MIN))时，x/y可能出现溢出。  
+因此，Assumption Δ：(y != 0) 且 (y != -1 and x != INT_MIN)
 
 根据 Δ = ∀e:Reach(e) → ¬Undef(e)，可以对以上的三行代码列出公式如下，最终得到Δ的具体表达式。
 ![alt text](/12_Bugs_夏亦谦_刘宁/example3.png)  
 解释说明一下Δ怎么计算出来的：Δ = ∀e:Reach(e) → ¬Undef(e)的意思是：对于任意的代码行e，在执行到了e的情况下，不会触发undefined behavior。由于本例中的代码段一共有三行，所以是对三行取交集。    
-第一行：Reach(e)为true，Undef(e)为(y == 0) or (x == -1 and y == INT_MIN)。  
+第一行：Reach(e)为true，Undef(e)为(y == 0) or (y == -1 and x == INT_MIN)。  
 第二行：Reach(e)为true，由于本行不存在undefined behavior，因此Undef(e)为false。  
 第三行：由于本行是在第二行成立的条件下才会执行到，因此Reach(e)=(y == -1 && x < 0 && x/y < 0)，同时本行也没有undefined behavior，因此Undef(e)为false。
 
 ###本文的Limitation
 1. 如果执行第二步时得不到准确的结果，那么会漏报一些unstable code；
-2. 如果执行第一步时得不到准确的结果，就会产生误报(false warning / false positive)。
+2. 如果执行第一步时得不到准确的结果，就会产生误报(false warning / false positive)。  
+3. 目前stack给出的Undefined behavior pattern 可能不齐全。
 
 ###如何避免Unstable Code
 * 对于程序员来说，通过fix bug或者去掉一些会被编译器当做是undefined behavior的代码；
-* 对于编译器来说，可以集成一些现有的bug-finding的工具，或者利用STACK的方式来判定unstable code。
-* 完善编程语言的specification，定义更多的代码执行规则，减少undefined behavior的产生
+* 对于编译器来说，可以集成一些现有的bug-finding的工具，或者利用STACK的方式来判定unstable code；  
+* 完善编程语言的specification，定义更多的代码执行规则，减少undefined behavior的产生。
 
 ###STACK为了更好的扩展性，做了什么权衡？
 1. STACK为了使可扩展性更高，在计算Δ = ∀e:Reach(e) → ¬Undef(e)的时候做了一些近似运算，使最后得到的结果可能会漏掉一些unstable code。  
